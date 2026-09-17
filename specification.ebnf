@@ -1,0 +1,36 @@
+#Grammar specs using EBNF
+#Scope todo:  define integer, define boolean, define type,
+
+(* Defined characters *)
+digit   = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+letter = "a" | ... | "z" | "A" | ... | "Z";
+(*Literals*)
+integer_literal = [ "+" | "-" ], digit, {digit};
+boolean_literal = "true" | "false"
+literal = integer_literal | boolean_literal;
+(* Types *)
+type_keyword = "int" | "bool";
+
+(* Operators *)
+assign_op = "=";
+
+(* Arithmetic operators *)
+add_op = "+";
+minus_op = "-";
+divide_op = "/";
+multiply_op = "*";
+arithmetic_op = add_op | minus_op | divide_op | multiply_op;
+
+(* Comparative operators *)
+equal_op = "==";
+greater_op = ">";
+smaller_op = "<";
+comparative_operator = equal_op | greater_op | smaller_op;
+(* Boolean operators *)
+and_op = "&&";
+or_op = "||";
+boolean_operator = and_op | or_op;
+
+(* Identifier *)
+identifier = letter, {letter | digit | "_"};
+
