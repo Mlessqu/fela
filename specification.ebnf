@@ -62,8 +62,10 @@ identifier = letter, {letter | digit | "_"};
 (* ========================================================================== *)
 (* LAYER 2: EXPRESSIONS                                                       *)
 (* ========================================================================== *)
-
-expression = literal | identifier;
+math_expression = ...
+compare_expression = ...
+logic_expression = asign_op, literal | identifier;
+expression = logic_expression | compare_expression | math_expression;
 
 
 (* ========================================================================== *)
@@ -71,13 +73,14 @@ expression = literal | identifier;
 (* ========================================================================== *)
 
 primary_instruction  = expression, ";";
-assign_instruction   = identifier, "=", (literal | identifier), ";";
+assign_instruction   = identifier, assign_op, expression, ";";
 block_instruction    = open_scope, {instruction}, close_scope;
-variable_declaration = type_keyword, identifier, ["=",expression], ";";
-if_instruction       = if_keyword, "(", expression, ")", instruction, [else_keyword, instruction];
-while_instruction    = while_keyword, "(", expression, ")", instruction;
+variable_declaration = type_keyword, identifier, [assign_op,expression], ";";
+if_instruction       = if_keyword, open_group, expression, close_group, instruction, [else_keyword, instruction];
+while_instruction    = while_keyword, open_group, expression, close_group, instruction;
 return_instruction = return_keyword, [expression],";";
-instruction = if_instruction | primary_instruction | variable_declaration | block_instruction | while_instruction | return_instruction;
+
+instruction = if_instruction | primary_instruction | variable_declaration | block_instruction | while_instruction | return_instruction| assign_instruction;
 
 
 (* ========================================================================== *)
@@ -85,3 +88,6 @@ instruction = if_instruction | primary_instruction | variable_declaration | bloc
 (* ========================================================================== *)
 
 (* functions *)
+argument_list = open_group,[argument, {",",argument}],close_group;
+function_definition = type_keyword, identifier, argument_list, instruction;
+function_call = identifier, argument_list;
