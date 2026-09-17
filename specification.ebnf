@@ -2,14 +2,13 @@
 #The scope I aim for:
 #variables, two types, while loop, if else blocks, function
 -------------------------------------------------------------------
-(* Section1: Tokens and lexer *)
-(* Defined characters *)
+
+
+
+(* Layer 0: Defined characters *)
 digit   = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 letter = "a" | ... | "z" | "A" | ... | "Z";
-(*Literals*)
-integer_literal = [ "+" | "-" ], digit, {digit};
-boolean_literal = "true" | "false";
-literal = integer_literal | boolean_literal;
+(* Section1: Tokens and Atoms *)
 (* Types *)
 type_keyword = "int" | "bool";
 
@@ -41,6 +40,10 @@ open_group = "(";
 close_group = ")";
 (* Identifier *)
 identifier = letter, {letter | digit | "_"};
+(*Literals*)
+integer_literal = [ "+" | "-" ], digit, {digit};
+boolean_literal = "true" | "false";
+literal = integer_literal | boolean_literal;
 (* Expression *)
 expression = literal | identifier;
 (*Section 2: Instructions*)
