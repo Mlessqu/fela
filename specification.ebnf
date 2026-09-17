@@ -1,6 +1,15 @@
 # Grammar specs using EBNF
 # The scope I aim for:
 # variables, two types, while loop, if else blocks, function
+#
+# TODO:
+# - Define 'parameter' and 'argument' rules
+# - Add 'function_call' into 'expression'
+# - Build expression precedence (primary, unary, math, compare, logic)
+# - Add missing operators: !=, <=, >=, !, unary -
+# - Define root 'program' rule
+# - (Optional) Add 'void' type
+
 
 (* ========================================================================== *)
 (* LAYER 0: DEFINED CHARACTERS                                               *)
@@ -89,5 +98,6 @@ instruction = if_instruction | primary_instruction | variable_declaration | bloc
 
 (* functions *)
 argument_list = open_group,[argument, {",",argument}],close_group;
-function_definition = type_keyword, identifier, argument_list, instruction;
+param_list = open_group, [parameter, {",",parameter}],close_group;
+function_definition = type_keyword, identifier, param_list, instruction;
 function_call = identifier, argument_list;
