@@ -1,12 +1,14 @@
 #Grammar specs using EBNF
-#Scope todo:  define integer, define boolean, define type,
-
+#The scope I aim for:
+#variables, two types, while loop, if else blocks, function
+-------------------------------------------------------------------
+(* Section1: Tokens and lexer *)
 (* Defined characters *)
 digit   = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 letter = "a" | ... | "z" | "A" | ... | "Z";
 (*Literals*)
 integer_literal = [ "+" | "-" ], digit, {digit};
-boolean_literal = "true" | "false"
+boolean_literal = "true" | "false";
 literal = integer_literal | boolean_literal;
 (* Types *)
 type_keyword = "int" | "bool";
@@ -19,7 +21,8 @@ add_op = "+";
 minus_op = "-";
 divide_op = "/";
 multiply_op = "*";
-arithmetic_op = add_op | minus_op | divide_op | multiply_op;
+first_order_math_op = divide_op | multiply_op;
+second_order_math_op = add_op | minus_op;
 
 (* Comparative operators *)
 equal_op = "==";
@@ -30,7 +33,32 @@ comparative_operator = equal_op | greater_op | smaller_op;
 and_op = "&&";
 or_op = "||";
 boolean_operator = and_op | or_op;
+(* Grouping operators *)
+open_scope = "{";
+close_scope = "}";
 
+open_group = "(";
+close_group = ")";
 (* Identifier *)
 identifier = letter, {letter | digit | "_"};
+(* Expression *)
+expression = literal | identifier;
+(*Section 2: Instructions*)
+
+(* Variables *)
+variable_declaration = type_keyword, identifier, ";" | assign_instruction;
+(* Instructions *)
+instruction = if_instruction | primary_instruction | variable_declaration;
+
+primary_instruction = expression, ";";
+assign_instruction = identifier,"=",literal|identifier,";";
+
+
+(* If else  *)
+if_keyword = "if";
+else_keyword = "else";
+if_instruction = if_keyword, "(", expression, ")" , instruction, [else_keyword, instruction];
+(* while *)
+(* functions *)
+
 
