@@ -1,14 +1,9 @@
 # Grammar specs using EBNF
 # The scope I aim for:
-# variables, two types, while loop, if else blocks, function
-#
 # TODO:
 # - Define 'parameter' and 'argument' rules
 # - Add 'function_call' into 'expression'
-# - Build expression precedence (primary, unary, math, compare, logic)
-# - Add missing operators: !=, <=, >=, !, unary -
-# - Define root 'program' rule
-# - (Optional) Add 'void' type
+# - Add missing operators: !, unary -
 
 
 (* ========================================================================== *)
@@ -24,12 +19,12 @@ letter = "a" | ... | "z" | "A" | ... | "Z";
 (* ========================================================================== *)
 
 (* Literals *)
-integer_literal = [ "+" | "-" ], digit, {digit};
+integer_literal = digit, {digit};
 boolean_literal = "true" | "false";
 literal         = integer_literal | boolean_literal;
 
 (* Types *)
-type_keyword = "int" | "bool";
+type_keyword = "int" | "bool" | "void";
 
 (* Keywords *)
 if_keyword   = "if";
@@ -77,7 +72,7 @@ identifier = letter, {letter | digit | "_"};
 (* ========================================================================== *)
 grouped_expression     = open_group, expression, close_group;
 primary_expression     = literal | identifier | function_call | grouped_expression;
-unary_expression       = [ minus_sign | negation_op ], primary_expression;
+unary_expression       = [ minus_sign | plus_sign | negation_op ], primary_expression;
 multiplying_expression = unary_expression, { first_order_math_op, unary_expression };
 additive_expression    = multiplying_expression, { second_order_math_op, multiplying_expression };
 relational_expression  = additive_expression, { (smaller_op | greater_op), additive_expression };
@@ -107,9 +102,12 @@ instruction = if_instruction | primary_instruction | variable_declaration | bloc
 (* ========================================================================== *)
 
 (* functions *)
-argument = type_keyword, identifier;
-argument_list = open_group,[argument, {",",argument}],close_group;
-parameter = identifier;
+parameter = type_keyword, identifier;
 param_list = open_group, [parameter, {",",parameter}],close_group;
+argument = identifier;
+argument_list = open_group,[argument, {",",argument}],close_group;
 function_definition = type_keyword, identifier, param_list, instruction;
-function_call = identifier, argument_list;
+
+
+(* Program *)
+program = { function_definition | variable_declaration };
