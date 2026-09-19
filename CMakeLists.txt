@@ -3,6 +3,8 @@ project(fela)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_executable(fela src/main.cpp)
+add_executable(fela src/main.cpp
+        src/Lexer.cpp
+        src/Lexer.h++)
 #target_link_libraries(fela PRIVATE)
 
