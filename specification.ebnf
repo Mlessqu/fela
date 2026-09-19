@@ -37,8 +37,8 @@ return_keyword = "return";
 (* Assignment operator *)
 assign_op = "=";
 (* Unary operators *)
-minus_sign = "-";
-plus_sign = "+";
+minus_sign_op = "-";
+plus_sign_op = "+";
 negation_op = "!";
 (* Arithmetic operators *)
 add_op               = "+";
@@ -75,7 +75,7 @@ identifier = (letter| "_"), {letter | digit | "_"};
 (* ========================================================================== *)
 grouped_expression     = open_group, expression, close_group;
 primary_expression     = literal | identifier | function_call | grouped_expression;
-unary_expression       = { minus_sign | plus_sign | negation_op }, primary_expression;
+unary_expression       = { minus_sign_op | plus_sign_op | negation_op }, primary_expression;
 multiplying_expression = unary_expression, { first_order_math_op, unary_expression };
 additive_expression    = multiplying_expression, { second_order_math_op, multiplying_expression };
 relational_expression  = additive_expression, { (smaller_op | greater_op), additive_expression };
