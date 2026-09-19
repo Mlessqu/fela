@@ -13,6 +13,8 @@ namespace fela
         //literals
         integer_literal,
         boolean_literal,
+        false_boolean,
+        true_boolean,
         //types
         type_int,
         type_bool,
@@ -67,6 +69,7 @@ namespace fela
         bool is_digit(char _c);
         bool is_letter(char _c);
         bool is_alpha_num(char _c);
+        TokenType look_up_keyword_or_identifier(std::string_view _payload);
         char* cursor_=nullptr;
         const char* line_start_=nullptr;
         unsigned int line_=0;
