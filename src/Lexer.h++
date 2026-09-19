@@ -66,6 +66,9 @@ namespace fela
         char advance(); //consume char
         char peek(); // look at current poinitng char without consuming
         char peek_next(); //look at current+ 1 char without consuming
+        bool is_digit(char _c);
+        bool is_letter(char _c);
+        bool is_alpha_num(char _c);
         size_t pointer_=0;
         std::string source_code_;
     };
