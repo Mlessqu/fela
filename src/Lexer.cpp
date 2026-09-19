@@ -4,20 +4,31 @@ namespace fela
 {
     bool Lexer::load_file(std::string _file_path)
     {
+        //check file size
+        //preallocate string
+        //load into std::string
+        //append eof "\0"
+        return true;
     }
 
 
-    void Lexer::next_token()
+    Token Lexer::next_token()
     {
     }
 
 
-    void Lexer::advance()
+
+    char Lexer::advance()
     {
     }
 
 
-    void Lexer::peek()
+    char Lexer::peek()
+    {
+    }
+
+
+    char Lexer::peek_next()
     {
     }
 

@@ -61,11 +61,12 @@ namespace fela
     {
     public:
         bool load_file(std::string _file_path);
-        void next_token();
+        Token next_token();
     private:
-        void advance();
-        void peek();
-        std::string_view pointer_;
+        char advance(); //consume char
+        char peek(); // look at current poinitng char without consuming
+        char peek_next(); //look at current+ 1 char without consuming
+        size_t pointer_=0;
         std::string source_code_;
     };
 } // fela
