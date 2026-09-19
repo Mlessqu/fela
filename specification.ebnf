@@ -1,9 +1,4 @@
 # Grammar specs using EBNF
-# The scope I aim for:
-# TODO:
-# - Define 'parameter' and 'argument' rules
-# - Add 'function_call' into 'expression'
-# - Add missing operators: !, unary -
 
 
 (* ========================================================================== *)
@@ -107,7 +102,7 @@ param_list = open_group, [parameter, {",",parameter}],close_group;
 argument = identifier;
 argument_list = open_group,[argument, {",",argument}],close_group;
 function_definition = type_keyword, identifier, param_list, instruction;
-
+function_call = identifier, argument_list;
 
 (* Program *)
 program = { function_definition | variable_declaration };
