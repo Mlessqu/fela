@@ -78,47 +78,52 @@ namespace fela
 
     Token Lexer::next_token()
     {
-        //skip whitespaces
-
-        while (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_ == '\r' || *cursor_ == '\n')
+        //skip whitespaces and comments
+        while (true)
         {
-            if (*cursor_ == '\n')
-            {
-                line_++;
-                line_start_ = cursor_ + 1;
-            }
-            cursor_++;
-        }
-        //skip comments
-        //line comment
-        if (*cursor_ == '/' && *(cursor_ + 1) == '/')
-        {
-            cursor_ += 2;
-            while (*cursor_ != '\n' && *cursor_ != '\0') cursor_++;
-            if (*cursor_ == '\n')
-            {
-                line_++;
-                line_start_ = cursor_ + 1;
-            }
-            cursor_++;
-        }
-        if (*cursor_ == '/' && *(cursor_ + 1) == '*')
-        {
-            cursor_ += 2;
-            while (*cursor_ != '\0')
+            if (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_ == '\r' || *cursor_ == '\n')
             {
                 if (*cursor_ == '\n')
                 {
                     line_++;
                     line_start_ = cursor_ + 1;
                 }
-                if (*cursor_ == '*' && *(cursor_ + 1) == '/')
+                cursor_++;
+                continue;
+            }
+
+            if (*cursor_ == '/' && *(cursor_ + 1) == '/')
+            {
+                cursor_ += 2;
+                while (*cursor_ != '\n' && *cursor_ != '\0') cursor_++;
+                if (*cursor_ == '\n')
                 {
-                    cursor_ += 2;
-                    break;
+                    line_++;
+                    line_start_ = cursor_ + 1;
                 }
                 cursor_++;
+                continue;
             }
+            if (*cursor_ == '/' && *(cursor_ + 1) == '*')
+            {
+                cursor_ += 2;
+                while (*cursor_ != '\0')
+                {
+                    if (*cursor_ == '\n')
+                    {
+                        line_++;
+                        line_start_ = cursor_ + 1;
+                    }
+                    if (*cursor_ == '*' && *(cursor_ + 1) == '/')
+                    {
+                        cursor_ += 2;
+                        break;
+                    }
+                    cursor_++;
+                }
+                continue;
+            }
+            break;
         }
         const char* tok_start = cursor_;
         unsigned int column = static_cast<unsigned int>(tok_start - line_start_) + 1;
@@ -214,6 +219,7 @@ namespace fela
                 cursor_++;
                 if (*cursor_ == '&')
                 {
+                    cursor_++;
                     return Token{.type_ = TokenType::and_op, line_, column, {tok_start, 2}};
                 }
                 break;
@@ -223,10 +229,12 @@ namespace fela
                 cursor_++;
                 if (*cursor_ == '|')
                 {
+                    cursor_++;
                     return Token{.type_ = TokenType::or_op, line_, column, {tok_start, 2}};
                 }
                 break;
             }
+        default:
             cursor_++;
             return Token{.type_ = TokenType::unknown, line_, column, {tok_start, 1}};
         }
