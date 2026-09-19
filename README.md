@@ -4,5 +4,6 @@ This repo is meant to document that journey.
 
 Milestones:
 Write initial language spec using EBNF - done wrote micro subset of C using ENBF
-Current goal: 
+Current goals: 
 Research and write lexer skeleton.
+Research and write parser skeleton. 
