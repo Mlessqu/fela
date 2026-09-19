@@ -47,6 +47,9 @@ namespace fela
         close_group,
         //identifier
         identifier,
+        //comments
+        comment_line,
+        comment_block
 
     };
     struct Token

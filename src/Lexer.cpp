@@ -56,7 +56,6 @@ namespace fela
 
     TokenType Lexer::look_up_keyword_or_identifier(std::string_view _payload)
     {
-        //TODO: stub for now finish
         if (_payload == "true") return TokenType::true_boolean;
         if (_payload == "false") return TokenType::false_boolean;
         if (_payload == "int") return TokenType::type_int;
@@ -65,12 +64,9 @@ namespace fela
         if (_payload == "if") return TokenType::if_keyword;
         if (_payload == "else") return TokenType::else_keyword;
         if (_payload == "while") return TokenType::while_keyword;
-
-
-
+        if (_payload == "return") return TokenType::return_keyword;
         return TokenType::identifier;
     }
-
 
 
     bool Lexer::is_alpha_num(char _c)
@@ -82,8 +78,8 @@ namespace fela
 
     Token Lexer::next_token()
     {
-        //skip whitespaces and comments
-        //TODO: skip comments
+        //skip whitespaces
+
         while (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_ == '\r' || *cursor_ == '\n')
         {
             if (*cursor_ == '\n')
@@ -93,7 +89,12 @@ namespace fela
             }
             cursor_++;
         }
-
+        //skip comments
+        //line comment
+        if (*cursor_== '/' && *(cursor_+1)=='/')
+        {
+            cursor_+=2;
+        }
         const char* tok_start = cursor_;
         unsigned int column = static_cast<unsigned int>(tok_start - line_start_) + 1;
         switch (*cursor_)
@@ -112,6 +113,93 @@ namespace fela
                 cursor_++;
                 return Token{.type_ = TokenType::coma, line_, column, {tok_start, 1}};
             }
+        case '=':
+            {
+                cursor_++;
+                if (*cursor_ == '=')
+                {
+                    cursor_++;
+                    return Token{.type_ = TokenType::equal_op, line_, column, {tok_start, 2}};
+                }
+
+                return Token{.type_ = TokenType::assign, line_, column, {tok_start, 1}};
+            }
+        case '+':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::plus, line_, column, {tok_start, 1}};
+            }
+        case '-':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::minus, line_, column, {tok_start, 1}};
+            }
+        case '!':
+            {
+                cursor_++;
+                if (*cursor_ == '=')
+                {
+                    cursor_++;
+                    return Token{.type_ = TokenType::not_equal_op, line_, column, {tok_start, 2}};
+                }
+                return Token{.type_ = TokenType::negation_op, line_, column, {tok_start, 1}};
+            }
+        case '/':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::divide_op, line_, column, {tok_start, 1}};
+            }
+        case '*':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::multiply_op, line_, column, {tok_start, 1}};
+            }
+        case '>':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::greater_op, line_, column, {tok_start, 1}};
+            }
+        case '<':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::smaller_op, line_, column, {tok_start, 1}};
+            }
+        case '(':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::open_group, line_, column, {tok_start, 1}};
+            }
+        case ')':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::close_group, line_, column, {tok_start, 1}};
+            }
+        case '{':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::open_scope, line_, column, {tok_start, 1}};
+            }
+        case '}':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::close_scope, line_, column, {tok_start, 1}};
+            }
+        case '&':
+            {
+                cursor_++;
+                if (*cursor_=='&')
+                {
+                return Token{.type_ = TokenType::and_op,line_,column,{tok_start,2}};
+                }
+            }
+        case '|':
+            {
+                cursor_++;
+                if (*cursor_=='|')
+                {
+                    return Token{.type_ = TokenType::or_op,line_,column,{tok_start,2}};
+                }
+            }
         }
         //switch exhausts all cases of 1 and 2 char tokens, therefore this must by vary length token
 
@@ -121,16 +209,16 @@ namespace fela
             while (is_digit(*cursor_)) cursor_++;
             std::size_t len = cursor_ - tok_start;
             std::string_view payload{tok_start, len};
-            Token token{.type_ = TokenType::integer_literal,line_,column,payload};
+            Token token{.type_ = TokenType::integer_literal, line_, column, payload};
             return token;
         }
         if (is_letter(*cursor_))
         {
             while (is_alpha_num(*cursor_)) cursor_++;
-            std::size_t len = cursor_-tok_start;
-            std::string_view payload{tok_start,len};
-            TokenType token_type =  look_up_keyword_or_identifier(payload);
-            return Token{token_type,line_,column,payload};
+            std::size_t len = cursor_ - tok_start;
+            std::string_view payload{tok_start, len};
+            TokenType token_type = look_up_keyword_or_identifier(payload);
+            return Token{token_type, line_, column, payload};
         }
         //construct token, return token
         return Token{};
