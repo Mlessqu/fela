@@ -12,7 +12,7 @@ letter = "a" | ... | "z" | "A" | ... | "Z";
 newline = "\n" | "\r\n";
 whitespace = " " | "\t" | "\r" | "\n";
 semi = ";";
-
+coma = ",";
 line_comment = "//", {any_char - newline}, newline;
 block_comment = "/*" , {any_char}, "*/";
 comment = line_comment | block_comment;

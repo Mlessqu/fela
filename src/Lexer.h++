@@ -4,7 +4,10 @@ namespace fela
 {
     enum class TokenType
     {
+        //general
         semi,
+        coma,
+        eof,
         //literals
         integer_literal,
         boolean_literal,
@@ -18,14 +21,11 @@ namespace fela
         while_keyword,
         return_keyword,
         //operators
-        assign_op,
-        //unary
-        minus_sign_op,
-        plus_sign_op,
+        assign,
+        minus,
+        plus,
         negation_op,
         //math
-        add_op,
-        minus_op,
         divide_op,
         multiply_op,
         //comparative op
@@ -43,6 +43,7 @@ namespace fela
         close_group,
         //identifier
         identifier,
+
     };
     struct Token
     {
