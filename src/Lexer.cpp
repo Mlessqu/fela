@@ -13,6 +13,9 @@ namespace fela
         source_code_.resize(file_size);
         if (!file.read(source_code_.data(),file_size)) return false;
         source_code_.push_back('\0');
+        cursor_= source_code_.data();
+        line_=1;
+        column_=1;
         return true;
     }
 

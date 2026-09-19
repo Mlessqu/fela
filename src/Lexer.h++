@@ -67,6 +67,9 @@ namespace fela
         bool is_digit(char _c);
         bool is_letter(char _c);
         bool is_alpha_num(char _c);
+        char* cursor_=nullptr;
+        unsigned int line_=0;
+        unsigned int column_ = 0;
         std::string source_code_;
     };
 } // fela
