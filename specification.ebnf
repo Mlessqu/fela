@@ -109,8 +109,10 @@ parameter = type_keyword, identifier;
 param_list = open_group, [parameter, {",",parameter}],close_group;
 argument = expression;
 argument_list = open_group,[argument, {",",argument}],close_group;
+
+function_declaration = type_keyword, identifier, param_list, ";";
 function_definition = type_keyword, identifier, param_list, block_instruction;
-function_call = identifier, argument_list;
+function_call = identifier, argument_list, ";";
 
 (* Program *)
-program = { function_definition |  variable_declaration };
+program = { function_definition | function_declaration | variable_declaration };
