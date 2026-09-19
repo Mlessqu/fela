@@ -11,6 +11,7 @@ letter = "a" | ... | "z" | "A" | ... | "Z";
 
 newline = "\n" | "\r\n";
 whitespace = " " | "\t" | "\r" | "\n";
+semi = ";";
 
 line_comment = "//", {any_char - newline}, newline;
 block_comment = "/*" , {any_char}, "*/";
@@ -89,13 +90,13 @@ expression             = logic_or_expression;
 (* LAYER 3: INSTRUCTIONS                                                      *)
 (* ========================================================================== *)
 
-primary_instruction  = expression, ";";
-assign_instruction   = identifier, assign_op, expression, ";";
+primary_instruction  = expression, semi;
+assign_instruction   = identifier, assign_op, expression, semi;
 block_instruction    = open_scope, {instruction}, close_scope;
-variable_declaration = type_keyword, identifier, [assign_op,expression], ";";
+variable_declaration = type_keyword, identifier, [assign_op,expression], semi;
 if_instruction       = if_keyword, open_group, expression, close_group, instruction, [else_keyword, instruction];
 while_instruction    = while_keyword, open_group, expression, close_group, instruction;
-return_instruction = return_keyword, [expression],";";
+return_instruction = return_keyword, [expression],semi;
 
 instruction = if_instruction | primary_instruction | variable_declaration | block_instruction | while_instruction | return_instruction| assign_instruction;
 
@@ -110,9 +111,9 @@ param_list = open_group, [parameter, {",",parameter}],close_group;
 argument = expression;
 argument_list = open_group,[argument, {",",argument}],close_group;
 
-function_declaration = type_keyword, identifier, param_list, ";";
+function_declaration = type_keyword, identifier, param_list, semi;
 function_definition = type_keyword, identifier, param_list, block_instruction;
-function_call = identifier, argument_list, ";";
+function_call = identifier, argument_list, semi;
 
 (* Program *)
 program = { function_definition | function_declaration | variable_declaration };
