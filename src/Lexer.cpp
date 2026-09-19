@@ -94,6 +94,26 @@ namespace fela
         if (*cursor_== '/' && *(cursor_+1)=='/')
         {
             cursor_+=2;
+            while (*cursor_!= '\n' && *cursor_ != '\0') cursor_++;
+
+        }
+        if (*cursor_== '/' && *(cursor_+1)=='*')
+        {
+            cursor_+=2;
+            while (*cursor_!= '\0')
+            {
+                if (*cursor_ == '\n')
+                {
+                    line_++;
+                    line_start_=cursor_+1;
+                }
+                if (*cursor_== '*' && *(cursor_+1)=='/')
+                {
+                    cursor_+=2;
+                    break;
+                }
+                cursor_++;
+            }
         }
         const char* tok_start = cursor_;
         unsigned int column = static_cast<unsigned int>(tok_start - line_start_) + 1;
