@@ -14,8 +14,9 @@ namespace fela
         if (!file.read(source_code_.data(),file_size)) return false;
         source_code_.push_back('\0');
         cursor_= source_code_.data();
+        line_start_ = cursor_;
         line_=1;
-        column_=1;
+
         return true;
     }
 
@@ -62,6 +63,26 @@ namespace fela
 
     Token Lexer::next_token()
     {
+        Token token;
+        //skip whitespaces and comments
+        //TODO: skip comments
+        while (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_== '\r' || *cursor_ == '\n')
+        {
+            if (*cursor_ == '\n') line_++;
+            cursor_++;
+        }
+
+        const char* tok_start = cursor_;
+        switch(*cursor_)
+        {
+        case ';':
+            {
+                cursor_++;
+                return Token{ .type_ = TokenType::semi,line_, 0, ""};
+            }
+        }
+
+
         return Token{};
     }
 

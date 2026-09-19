@@ -51,7 +51,7 @@ namespace fela
     {
         TokenType type_;
         unsigned int line_;
-        unsigned int n_;
+        unsigned int column_;
         std::string_view payload_;
     };
     //TODO: the idea is lexer loads whole thing at once into memory then we traverse with std::string_view
@@ -68,8 +68,8 @@ namespace fela
         bool is_letter(char _c);
         bool is_alpha_num(char _c);
         char* cursor_=nullptr;
+        const char* line_start_=nullptr;
         unsigned int line_=0;
-        unsigned int column_ = 0;
         std::string source_code_;
     };
 } // fela
