@@ -5,10 +5,17 @@
 (* LAYER 0: DEFINED CHARACTERS                                               *)
 (* ========================================================================== *)
 
+any_char = ? any ASCII character ? (* meant to be used only for comments! *)
 digit  = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 letter = "a" | ... | "z" | "A" | ... | "Z";
 
+newline = "\n" | "\r\n";
+whitespace = " " | "\t" | "\r" | "\n";
 
+line_comment = "//", {any_char - newline}, newline;
+block_comment = "/*" , {any_char}, "*/";
+comment = line_comment | block_comment;
+ignored_tokens = whitespace | comment;
 (* ========================================================================== *)
 (* LAYER 1: TERMINALS & TOKENS                                                *)
 (* ========================================================================== *)
@@ -68,7 +75,7 @@ identifier = (letter| "_"), {letter | digit | "_"};
 (* ========================================================================== *)
 grouped_expression     = open_group, expression, close_group;
 primary_expression     = literal | identifier | function_call | grouped_expression;
-unary_expression       = [ minus_sign | plus_sign | negation_op ], primary_expression;
+unary_expression       = { minus_sign | plus_sign | negation_op }, primary_expression;
 multiplying_expression = unary_expression, { first_order_math_op, unary_expression };
 additive_expression    = multiplying_expression, { second_order_math_op, multiplying_expression };
 relational_expression  = additive_expression, { (smaller_op | greater_op), additive_expression };
@@ -102,7 +109,7 @@ parameter = type_keyword, identifier;
 param_list = open_group, [parameter, {",",parameter}],close_group;
 argument = expression;
 argument_list = open_group,[argument, {",",argument}],close_group;
-function_definition = type_keyword, identifier, param_list, instruction;
+function_definition = type_keyword, identifier, param_list, block_instruction;
 function_call = identifier, argument_list;
 
 (* Program *)
