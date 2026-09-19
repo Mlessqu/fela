@@ -91,25 +91,30 @@ namespace fela
         }
         //skip comments
         //line comment
-        if (*cursor_== '/' && *(cursor_+1)=='/')
+        if (*cursor_ == '/' && *(cursor_ + 1) == '/')
         {
-            cursor_+=2;
-            while (*cursor_!= '\n' && *cursor_ != '\0') cursor_++;
-
+            cursor_ += 2;
+            while (*cursor_ != '\n' && *cursor_ != '\0') cursor_++;
+            if (*cursor_ == '\n')
+            {
+                line_++;
+                line_start_ = cursor_ + 1;
+            }
+            cursor_++;
         }
-        if (*cursor_== '/' && *(cursor_+1)=='*')
+        if (*cursor_ == '/' && *(cursor_ + 1) == '*')
         {
-            cursor_+=2;
-            while (*cursor_!= '\0')
+            cursor_ += 2;
+            while (*cursor_ != '\0')
             {
                 if (*cursor_ == '\n')
                 {
                     line_++;
-                    line_start_=cursor_+1;
+                    line_start_ = cursor_ + 1;
                 }
-                if (*cursor_== '*' && *(cursor_+1)=='/')
+                if (*cursor_ == '*' && *(cursor_ + 1) == '/')
                 {
-                    cursor_+=2;
+                    cursor_ += 2;
                     break;
                 }
                 cursor_++;
@@ -121,7 +126,7 @@ namespace fela
         {
         case '\0':
             {
-                return Token{.type_ = TokenType::eof, line_, column, {tok_start, 1}};
+                return Token{.type_ = TokenType::eof, line_, column, {tok_start, 0}};
             }
         case ';':
             {
@@ -207,21 +212,25 @@ namespace fela
         case '&':
             {
                 cursor_++;
-                if (*cursor_=='&')
+                if (*cursor_ == '&')
                 {
-                return Token{.type_ = TokenType::and_op,line_,column,{tok_start,2}};
+                    return Token{.type_ = TokenType::and_op, line_, column, {tok_start, 2}};
                 }
+                break;
             }
         case '|':
             {
                 cursor_++;
-                if (*cursor_=='|')
+                if (*cursor_ == '|')
                 {
-                    return Token{.type_ = TokenType::or_op,line_,column,{tok_start,2}};
+                    return Token{.type_ = TokenType::or_op, line_, column, {tok_start, 2}};
                 }
+                break;
             }
+            cursor_++;
+            return Token{.type_ = TokenType::unknown, line_, column, {tok_start, 1}};
         }
-        //switch exhausts all cases of 1 and 2 char tokens, therefore this must by vary length token
+
 
         //digits
         if (is_digit(*cursor_))

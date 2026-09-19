@@ -49,8 +49,8 @@ namespace fela
         identifier,
         //comments
         comment_line,
-        comment_block
-
+        comment_block,
+        unknown
     };
     struct Token
     {
