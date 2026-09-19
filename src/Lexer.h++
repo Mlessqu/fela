@@ -67,7 +67,6 @@ namespace fela
         bool is_digit(char _c);
         bool is_letter(char _c);
         bool is_alpha_num(char _c);
-        size_t pointer_=0;
         std::string source_code_;
     };
 } // fela

@@ -1,18 +1,18 @@
 #include "Lexer.h++"
 
 #include <filesystem>
+#include <fstream>
 
 namespace fela
 {
     bool Lexer::load_file(std::string _file_path)
     {
-        //check file size
-        //preallocate string
-        //load into std::string
-        //append eof "\0"
+        std::ifstream file(_file_path, std::ios::binary);
+        if (!file.is_open()) return false;
         auto file_size = std::filesystem::file_size(_file_path);
         source_code_.resize(file_size);
-        
+        if (!file.read(source_code_.data(),file_size)) return false;
+        source_code_.push_back('\0');
         return true;
     }
 
