@@ -13,7 +13,7 @@ newline = "\n" | "\r\n";
 whitespace = " " | "\t" | "\r" | "\n";
 semi = ";";
 coma = ",";
-underscore "_";
+underscore = "_";
 line_comment = "//", {any_char - newline}, newline;
 block_comment = "/*" , {any_char}, "*/";
 comment = line_comment | block_comment;
@@ -114,7 +114,7 @@ argument_list = open_group,[argument, {",",argument}],close_group;
 
 function_declaration = type_keyword, identifier, param_list, semi;
 function_definition = type_keyword, identifier, param_list, block_instruction;
-function_call = identifier, argument_list, semi;
+function_call = identifier, argument_list;
 
 (* Program *)
 program = { function_definition | function_declaration | variable_declaration };
