@@ -26,6 +26,7 @@ if_keyword   = "if";
 else_keyword = "else";
 while_keyword = "while";
 return_keyword = "return";
+
 (* Assignment operator *)
 assign_op = "=";
 (* Unary operators *)
@@ -99,7 +100,7 @@ instruction = if_instruction | primary_instruction | variable_declaration | bloc
 (* functions *)
 parameter = type_keyword, identifier;
 param_list = open_group, [parameter, {",",parameter}],close_group;
-argument = identifier;
+argument = expression;
 argument_list = open_group,[argument, {",",argument}],close_group;
 function_definition = type_keyword, identifier, param_list, instruction;
 function_call = identifier, argument_list;
