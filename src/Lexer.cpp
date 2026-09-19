@@ -53,23 +53,10 @@ namespace fela
 
     Token Lexer::next_token()
     {
+        return Token{};
     }
 
 
-
-    char Lexer::advance()
-    {
-    }
-
-
-    char Lexer::peek()
-    {
-    }
-
-
-    char Lexer::peek_next()
-    {
-    }
 
 
     //implementation details here
