@@ -1,5 +1,7 @@
 #include "Lexer.h++"
 
+#include <filesystem>
+
 namespace fela
 {
     bool Lexer::load_file(std::string _file_path)
@@ -8,9 +10,14 @@ namespace fela
         //preallocate string
         //load into std::string
         //append eof "\0"
+        auto file_size = std::filesystem::file_size(_file_path);
+        source_code_.resize(file_size);
+        
         return true;
     }
-    //3 cases
+
+
+    //
     // 2-char tokens == != && ||  // /*
     //
     //1 char token
@@ -35,18 +42,17 @@ namespace fela
         if (is_underscore)
         {
             return true;
-        }else
-        {
-            if (small_let_min_bound && small_let_max_bound) return true;
-            if (capital_let_min_bound && capital_let_max_bound) return true;
-            return false;
         }
+
+        if (small_let_min_bound && small_let_max_bound) return true;
+        if (capital_let_min_bound && capital_let_max_bound) return true;
+        return false;
     }
 
 
     bool Lexer::is_alpha_num(char _c)
     {
-        if (is_digit(_c)|| is_letter(_c)) return true;
+        if (is_digit(_c) || is_letter(_c)) return true;
         return false;
     }
 
@@ -55,8 +61,6 @@ namespace fela
     {
         return Token{};
     }
-
-
 
 
     //implementation details here
