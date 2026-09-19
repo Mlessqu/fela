@@ -100,8 +100,8 @@ namespace fela
                 {
                     line_++;
                     line_start_ = cursor_ + 1;
+                    cursor_++;
                 }
-                cursor_++;
                 continue;
             }
             if (*cursor_ == '/' && *(cursor_ + 1) == '*')
@@ -131,17 +131,17 @@ namespace fela
         {
         case '\0':
             {
-                return Token{.type_ = TokenType::eof, line_, column, {tok_start, 0}};
+                return Token{TokenType::eof, line_, column, {tok_start, 0}};
             }
         case ';':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::semi, line_, column, {tok_start, 1}};
+                return Token{TokenType::semi, line_, column, {tok_start, 1}};
             }
         case ',':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::coma, line_, column, {tok_start, 1}};
+                return Token{TokenType::coma, line_, column, {tok_start, 1}};
             }
         case '=':
             {
@@ -149,20 +149,20 @@ namespace fela
                 if (*cursor_ == '=')
                 {
                     cursor_++;
-                    return Token{.type_ = TokenType::equal_op, line_, column, {tok_start, 2}};
+                    return Token{TokenType::equal_op, line_, column, {tok_start, 2}};
                 }
 
-                return Token{.type_ = TokenType::assign, line_, column, {tok_start, 1}};
+                return Token{TokenType::assign, line_, column, {tok_start, 1}};
             }
         case '+':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::plus, line_, column, {tok_start, 1}};
+                return Token{TokenType::plus, line_, column, {tok_start, 1}};
             }
         case '-':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::minus, line_, column, {tok_start, 1}};
+                return Token{TokenType::minus, line_, column, {tok_start, 1}};
             }
         case '!':
             {
@@ -170,49 +170,49 @@ namespace fela
                 if (*cursor_ == '=')
                 {
                     cursor_++;
-                    return Token{.type_ = TokenType::not_equal_op, line_, column, {tok_start, 2}};
+                    return Token{TokenType::not_equal_op, line_, column, {tok_start, 2}};
                 }
-                return Token{.type_ = TokenType::negation_op, line_, column, {tok_start, 1}};
+                return Token{TokenType::negation_op, line_, column, {tok_start, 1}};
             }
         case '/':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::divide_op, line_, column, {tok_start, 1}};
+                return Token{TokenType::divide_op, line_, column, {tok_start, 1}};
             }
         case '*':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::multiply_op, line_, column, {tok_start, 1}};
+                return Token{TokenType::multiply_op, line_, column, {tok_start, 1}};
             }
         case '>':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::greater_op, line_, column, {tok_start, 1}};
+                return Token{TokenType::greater_op, line_, column, {tok_start, 1}};
             }
         case '<':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::smaller_op, line_, column, {tok_start, 1}};
+                return Token{TokenType::smaller_op, line_, column, {tok_start, 1}};
             }
         case '(':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::open_group, line_, column, {tok_start, 1}};
+                return Token{TokenType::open_group, line_, column, {tok_start, 1}};
             }
         case ')':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::close_group, line_, column, {tok_start, 1}};
+                return Token{TokenType::close_group, line_, column, {tok_start, 1}};
             }
         case '{':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::open_scope, line_, column, {tok_start, 1}};
+                return Token{TokenType::open_scope, line_, column, {tok_start, 1}};
             }
         case '}':
             {
                 cursor_++;
-                return Token{.type_ = TokenType::close_scope, line_, column, {tok_start, 1}};
+                return Token{TokenType::close_scope, line_, column, {tok_start, 1}};
             }
         case '&':
             {
@@ -220,7 +220,7 @@ namespace fela
                 if (*cursor_ == '&')
                 {
                     cursor_++;
-                    return Token{.type_ = TokenType::and_op, line_, column, {tok_start, 2}};
+                    return Token{TokenType::and_op, line_, column, {tok_start, 2}};
                 }
                 break;
             }
@@ -230,7 +230,7 @@ namespace fela
                 if (*cursor_ == '|')
                 {
                     cursor_++;
-                    return Token{.type_ = TokenType::or_op, line_, column, {tok_start, 2}};
+                    return Token{TokenType::or_op, line_, column, {tok_start, 2}};
                 }
                 break;
             }
@@ -245,7 +245,7 @@ namespace fela
             while (is_digit(*cursor_)) cursor_++;
             std::size_t len = cursor_ - tok_start;
             std::string_view payload{tok_start, len};
-            Token token{.type_ = TokenType::integer_literal, line_, column, payload};
+            Token token{TokenType::integer_literal, line_, column, payload};
             return token;
         }
         if (is_letter(*cursor_))
@@ -257,7 +257,7 @@ namespace fela
             return Token{token_type, line_, column, payload};
         }
         cursor_++;
-        return Token{.type_ = TokenType::unknown, line_, column, {tok_start, 1}};
+        return Token{TokenType::unknown, line_, column, {tok_start, 1}};
     }
 
 
