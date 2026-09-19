@@ -10,7 +10,10 @@ namespace fela
         //append eof "\0"
         return true;
     }
-
+    //3 cases
+    // 2-char tokens == != && ||  // /*
+    //1 char token
+    //variable_len tokens
 
     Token Lexer::next_token()
     {
