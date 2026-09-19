@@ -113,4 +113,4 @@ function_definition = type_keyword, identifier, param_list, block_instruction;
 function_call = identifier, argument_list;
 
 (* Program *)
-program = { function_definition | variable_declaration };
+program = { function_definition |  variable_declaration };
