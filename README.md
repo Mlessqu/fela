@@ -6,4 +6,5 @@ Milestones:
 Write initial language spec using EBNF - done wrote micro subset of C using ENBF
 Current goals: 
 Research and write lexer skeleton.
+-based on spec identify tokens needed 
 Research and write parser skeleton. 
