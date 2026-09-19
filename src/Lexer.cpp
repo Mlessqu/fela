@@ -235,8 +235,7 @@ namespace fela
                 break;
             }
         default:
-            cursor_++;
-            return Token{.type_ = TokenType::unknown, line_, column, {tok_start, 1}};
+            break;
         }
 
 
@@ -257,8 +256,8 @@ namespace fela
             TokenType token_type = look_up_keyword_or_identifier(payload);
             return Token{token_type, line_, column, payload};
         }
-        //construct token, return token
-        return Token{};
+        cursor_++;
+        return Token{.type_ = TokenType::unknown, line_, column, {tok_start, 1}};
     }
 
 
