@@ -7,9 +7,9 @@ namespace fela
     enum class TokenType
     {
         //general
+        eof,
         semi,
         coma,
-        eof,
         //literals
         integer_literal,
         boolean_literal,

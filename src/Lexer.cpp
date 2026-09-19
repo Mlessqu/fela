@@ -68,17 +68,27 @@ namespace fela
         //TODO: skip comments
         while (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_== '\r' || *cursor_ == '\n')
         {
-            if (*cursor_ == '\n') line_++;
+            if (*cursor_ == '\n')
+            {
+                line_++;
+                line_start_ = cursor_ +1;
+            }
             cursor_++;
         }
 
         const char* tok_start = cursor_;
+        unsigned int column = static_cast<unsigned int>(tok_start-line_start_) + 1;
         switch(*cursor_)
         {
+        case '\0':
+            {
+                cursor_++;
+                return Token{.type_ = TokenType::eof, line_, column,{tok_start,1}};
+            }
         case ';':
             {
                 cursor_++;
-                return Token{ .type_ = TokenType::semi,line_, 0, ""};
+                return Token{ .type_ = TokenType::semi,line_, column, {tok_start,1}};
             }
         }
 
