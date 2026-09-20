@@ -20,7 +20,7 @@ namespace fela
         bool expect_and_consume(TokenType _expected_type, std::string _error_message);
         std::string format_expected_error(std::string_view _expected);
     public:
-        Parser(std::vector<Token> _tokens);
+        explicit Parser(std::vector<Token> _tokens);
         void parse_program();
     private:
         //rest of grammar here

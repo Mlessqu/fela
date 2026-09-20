@@ -52,7 +52,7 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens)
+    Parser::Parser(std::vector<Token> _tokens) : tokens_(_tokens)
     {
     }
 
@@ -103,7 +103,11 @@ namespace fela
     void Parser::parse_return_instruction()
     {
         consume_token();
-        //how to identify return type?
+        if (is_not_type(TokenType::semi))
+        {
+            parse_expression();
+        }
+        expect_and_consume(TokenType::semi,format_expected_error(";"));
     }
 
 
@@ -148,7 +152,10 @@ namespace fela
     void Parser::parse_block_instruction()
     {
         consume_token();
+        while (is_not_type(TokenType::close_scope)&&is_not_type(TokenType::eof))
+        {
         parse_instruction();
+        }
         expect_and_consume(TokenType::close_scope,format_expected_error("}"));
     }
 
@@ -191,20 +198,18 @@ namespace fela
 
     void Parser::parse_primary_expression()
     {
-            //identifier + ( - func_call
-            //identifier conflict
         if (is_type(TokenType::identifier))
         {
             auto ahead = look_ahead();
             if (ahead == TokenType::open_group)
             {
-                //func call
+                        //func call
             }
-            //identifier
+            consume_token();
         }
         if (is_type(TokenType::integer_literal) || is_type(TokenType::boolean_literal))
         {
-        //literal
+        consume_token();
         }
         if(is_type(TokenType::open_group))
         {
