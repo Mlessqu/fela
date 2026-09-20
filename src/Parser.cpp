@@ -1,5 +1,6 @@
 #include "Parser.h++"
 #include<fmt/core.h>
+
 namespace fela
 {
     const Token& Parser::get_current_token()
@@ -23,7 +24,7 @@ namespace fela
     const Token& Parser::consume_token()
     {
         const Token& token = tokens_[cursor_];
-        if (token.type_!= TokenType::eof)
+        if (token.type_ != TokenType::eof)
         {
             cursor_++;
         }
@@ -62,11 +63,34 @@ namespace fela
     void Parser::parse_instruction()
     {
         if (is_type(TokenType::return_keyword))
-        if (is_type(TokenType::if_keyword))
-        if (is_type(TokenType::else_keyword))
-        if (is_type(TokenType::while_keyword))
-
+        {
         }
+        else if (is_type(TokenType::if_keyword))
+        {
+            //parse if instruction
+        }
+        else if (is_type(TokenType::else_keyword))
+        {
+            //parse else instruction
+        }
+        else if (is_type(TokenType::while_keyword))
+        {
+            //parse while instruction
+        }
+        else if (is_type(TokenType::open_group))
+        {
+            //parse group instruction
+        }
+        else if (is_type(TokenType::type_int) || is_type(TokenType::type_bool))
+        {
+            //parse variable declaration
+        }
+        else
+        {
+            //parse expressions
+            parse_expression();
+        }
+    }
 
 
     void Parser::parse_return_instruction()
@@ -106,6 +130,16 @@ namespace fela
 
     void Parser::parse_expression()
     {
+        if (is_type(TokenType::open_group))
+        {
+            parse_grouped_expression();
+        }else if (is_type(TokenType::integer_literal) || is_type(TokenType::boolean_literal) || is_type(TokenType::identifier) )
+        {
+            parse_primary_expression();
+        }else if (is_type(TokenType::negation_op)|| is_type(TokenType::minus))
+        {
+            parse_unary_expression();
+        }else //...
     }
 
 
