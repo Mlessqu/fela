@@ -102,26 +102,54 @@ namespace fela
 
     void Parser::parse_return_instruction()
     {
+        consume_token();
+        //how to identify return type?
     }
 
 
     void Parser::parse_while_instruction()
     {
+        consume_token();
+        expect_and_consume(TokenType::open_group,"Invalid syntax, expected '(' after while");
+        parse_expression();
+        expect_and_consume(TokenType::close_group,format_expected_error(")"));
+        parse_instruction();
     }
 
 
     void Parser::parse_if_instruction()
     {
+        consume_token();
+        expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after if");
+        parse_expression();
+        expect_and_consume(TokenType::close_group,format_expected_error(")"));
+        parse_instruction();
+        if (is_type(TokenType::else_keyword))
+        {
+            consume_token();
+            parse_instruction();
+        }
     }
 
 
     void Parser::parse_variable_declaration_instruction()
     {
+        consume_token();
+        expect_and_consume(TokenType::identifier,"Unexpected identifier syntax");
+        if (is_type(TokenType::assign))
+        {
+            consume_token();
+            parse_expression();
+        }
+        expect_and_consume(TokenType::semi, format_expected_error(";"));
     }
 
 
     void Parser::parse_block_instruction()
     {
+        consume_token();
+        parse_instruction();
+        expect_and_consume(TokenType::close_scope,format_expected_error("}"));
     }
 
 
@@ -163,8 +191,8 @@ namespace fela
 
     void Parser::parse_primary_expression()
     {
-        //identifier + ( - func_call
-        //identifier conflict
+            //identifier + ( - func_call
+            //identifier conflict
         if (is_type(TokenType::identifier))
         {
             auto ahead = look_ahead();
