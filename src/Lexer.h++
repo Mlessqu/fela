@@ -1,9 +1,13 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace fela
 {
+    constexpr unsigned int DEFAULT_START_LINE = 1;
+    constexpr char SOURCE_NULL_TERMINATOR = '\0';
+
     enum class TokenType
     {
         //general
@@ -66,6 +70,14 @@ namespace fela
     {
     public:
         bool load_file(std::string _file_path);
+        void load_source(std::string _source)
+        {
+            source_code_ = std::move(_source);
+            source_code_.push_back(SOURCE_NULL_TERMINATOR);
+            cursor_ = source_code_.data();
+            line_start_ = cursor_;
+            line_ = DEFAULT_START_LINE;
+        }
         Token next_token();
     private:
 
