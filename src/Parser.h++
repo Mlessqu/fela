@@ -23,7 +23,13 @@ namespace fela
         explicit Parser(std::vector<Token> _tokens);
         void parse_program();
     private:
-        //rest of grammar here
+        //functions
+        void parse_param_list();
+        void parse_function_declaration();
+        void parse_function_definition();
+
+        void parse_argument_list();
+        void parse_function_call();
         //instructions
         void parse_instruction();
         void parse_return_instruction();

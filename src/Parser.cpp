@@ -59,6 +59,7 @@ namespace fela
 
     void Parser::parse_program()
     {
+        //TODO: finish, cause not finished, might also need to update in EBNF specification if that's really what I want
         //entrypoint grammar here
         while (is_not_type(TokenType::eof))
         {
