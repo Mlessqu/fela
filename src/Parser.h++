@@ -14,9 +14,11 @@ namespace fela
         const Token& get_current_token();
         bool is_type(TokenType _type);
         bool is_not_type(TokenType _type);
+        const TokenType& look_ahead(size_t _offset);
         //advances cursor
         const Token& consume_token();
         bool expect_and_consume(TokenType _expected_type, std::string _error_message);
+        std::string format_expected_error(std::string_view _expected);
     public:
         Parser(std::vector<Token> _tokens);
         void parse_program();
