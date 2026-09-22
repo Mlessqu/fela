@@ -1,1 +1,8 @@
 /cmake-build-debug-clang-ninja/
+/.idea/.gitignore
+/.idea/editor.xml
+/.idea/fela.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
