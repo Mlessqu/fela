@@ -45,7 +45,7 @@ namespace fela
     }
 
 
-    std::string Parser::format_expected_error(std::string_view _expected)
+    std::string Parser::expected_diff_symbol_error(std::string_view _expected)
     {
         const Token& tok = get_current_token();
         return fmt::format("At line {}, col {} expected '{}' but got '{}'", tok.line_, tok.column_, _expected, tok.payload_);
@@ -108,7 +108,7 @@ namespace fela
         {
             parse_expression();
         }
-        expect_and_consume(TokenType::semi,format_expected_error(";"));
+        expect_and_consume(TokenType::semi,expected_diff_symbol_error(";"));
     }
 
 
@@ -117,7 +117,7 @@ namespace fela
         consume_token();
         expect_and_consume(TokenType::open_group,"Invalid syntax, expected '(' after while");
         parse_expression();
-        expect_and_consume(TokenType::close_group,format_expected_error(")"));
+        expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
         parse_instruction();
     }
 
@@ -127,7 +127,7 @@ namespace fela
         consume_token();
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after if");
         parse_expression();
-        expect_and_consume(TokenType::close_group,format_expected_error(")"));
+        expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
         parse_instruction();
         if (is_type(TokenType::else_keyword))
         {
@@ -146,7 +146,7 @@ namespace fela
             consume_token();
             parse_expression();
         }
-        expect_and_consume(TokenType::semi, format_expected_error(";"));
+        expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
     }
 
 
@@ -157,7 +157,7 @@ namespace fela
         {
         parse_instruction();
         }
-        expect_and_consume(TokenType::close_scope,format_expected_error("}"));
+        expect_and_consume(TokenType::close_scope,expected_diff_symbol_error("}"));
     }
 
 
@@ -166,14 +166,14 @@ namespace fela
         consume_token();
         consume_token();
         parse_expression();
-        expect_and_consume(TokenType::semi, format_expected_error(";"));
+        expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
     }
 
 
     void Parser::parse_primary_instruction()
     {
         parse_expression();
-        expect_and_consume(TokenType::semi, format_expected_error(";"));
+        expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
     }
 
 
@@ -193,7 +193,7 @@ namespace fela
     {
         consume_token();
         parse_expression();
-        expect_and_consume(TokenType::close_group, format_expected_error(")"));
+        expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
     }
 
 

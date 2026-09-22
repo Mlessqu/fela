@@ -18,7 +18,7 @@ namespace fela
         //advances cursor
         const Token& consume_token();
         bool expect_and_consume(TokenType _expected_type, std::string _error_message);
-        std::string format_expected_error(std::string_view _expected);
+        std::string expected_diff_symbol_error(std::string_view _expected);
     public:
         explicit Parser(std::vector<Token> _tokens);
         void parse_program();
