@@ -14,6 +14,7 @@ namespace fela
         const Token& get_current_token();
         bool is_type(TokenType _type);
         bool is_not_type(TokenType _type);
+        bool is_type_specifier_keyword();
         const TokenType& look_ahead(size_t _offset);
         //advances cursor
         const Token& consume_token();
