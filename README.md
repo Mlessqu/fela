@@ -21,4 +21,4 @@ Current goals:
 Code semantic checker that can generate AST tree
 Research how clang implements sema and AST.
 Research what I need exactly to have AST tree here.
-Research how to implement symbol table and ast nodes
+Research how to implement symbol table and ast nodes (what data structure do I need for each?)
