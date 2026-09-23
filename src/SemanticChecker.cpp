@@ -6,7 +6,7 @@ namespace fela
 {
     std::unique_ptr<AstExpression> SemanticChecker::literal_expression(std::variant<bool, int> _literal_expr)
     {
-        auto expression = std::make_unique<AstExpression>();
+        auto expression = std::make_unique<AstLiteralExpression>();
         if (std::holds_alternative<int>(_literal_expr))
         {
             expression->resolved_type_ = DataType::int_type;
@@ -38,10 +38,10 @@ namespace fela
             //error, expected it to be variable!
             return nullptr;
         }
-        auto expr = std::make_unique<AstVariableExpression>();
-        expr->identifier_ = _name_identifier;
-        expr->resolved_type_ = std::get<VariableSymbol>(symbol.symbol_signature_).type_;
-        return expr;
+        auto variable = std::make_unique<AstVariableExpression>();
+        variable->identifier_ = _name_identifier;
+        variable->resolved_type_ = std::get<VariableSymbol>(symbol.symbol_signature_).type_;
+        return variable;
     }
 
 
@@ -88,19 +88,69 @@ namespace fela
     {
         if (!_lhs) return nullptr;
         if (!_rhs) return nullptr;
-        auto expression = std::make_unique<AstBinaryExpression>();
-        expression->operator_=_operator;
+        auto binary_operation = std::make_unique<AstBinaryExpression>();
+        binary_operation->operator_ = _operator;
+
         //+ - * /  > <  musi byc int
         // || && - musi byc boolean
         // == moga byc oba
-        if (TokenType::equal_op == expression->operator_)
+        switch (binary_operation->operator_)
         {
-            if (_lhs->resolved_type_ == _rhs->resolved_type_)
+        case TokenType::equal_op:
+        case TokenType::not_equal_op:
             {
-                expression->resolved_type_ = DataType::bool_type;
-                return expression;
+              if (_lhs->resolved_type_ == DataType::bool_type &&  _rhs->resolved_type_ == DataType::bool_type)
+              {
+                  binary_operation->resolved_type_=DataType::bool_type;;
+                  binary_operation->lhs_ = std::move(_lhs);
+                  binary_operation->rhs_ = std::move(_rhs);
+                  return binary_operation;
+              }
+                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_== DataType::int_type)
+              {
+                  binary_operation->resolved_type_=DataType::bool_type;
+                  binary_operation->lhs_ = std::move(_lhs);
+                  binary_operation->rhs_ = std::move(_rhs);
+                  return binary_operation;
+              }
+             return nullptr;
             }
+            break;
+        case TokenType::and_op:
+        case TokenType::or_op:
+            {
+                // && and ||
+                if (_lhs->resolved_type_ == DataType::bool_type && _rhs->resolved_type_ == DataType::bool_type)
+                {
+                    binary_operation->resolved_type_ = DataType::bool_type;
+                    binary_operation->lhs_ = std::move(_lhs);
+                    binary_operation->rhs_ = std::move(_rhs);
+                    return binary_operation;
+                }
+            }
+            break;
+        case TokenType::minus:
+        case TokenType::plus:
+        case TokenType::multiply_op:
+        case TokenType::divide_op:
+            {
+                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_ == DataType::int_type)
+                {
+                    binary_operation->resolved_type_ = DataType::bool_type;
+                    binary_operation->lhs_ = std::move(_lhs);
+                    binary_operation->rhs_ = std::move(_rhs);
+                    return binary_operation;
+                }
+            }
+            break;
+        default:
+            {
+                //error kurwy, undefined operator
+                return nullptr;
+            }
+            break;
         }
+
 
     }
 
@@ -143,9 +193,6 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstFunction> SemanticChecker::return_instruction(std::unique_ptr<AstExpression> _return_expr)
-    {
-    }
 
 
     std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type, std::string _identifier,

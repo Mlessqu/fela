@@ -16,16 +16,31 @@ namespace fela
     };
     struct VariableSymbol
     {
+        std::string name_;
         DataType type_;
     };
     struct FunctionSymbol
     {
+        std::string name_;
         DataType return_type_;
         std::vector<DataType> param_types_;
     };
     struct Symbol
     {
         std::variant<VariableSymbol, FunctionSymbol> symbol_signature_;
+    };
+    struct Scope
+    {
+        std::unordered_map<std::string, Symbol> symbols_;
+    };
+    struct ScopeStack
+    {
+        void push_scope();
+        void pop_scope();
+        bool insert_symbol(const std::string& _name, const Symbol& _symbol);
+        const Symbol* lookup(const std::string& _name) const;
+    private:
+        std::vector<Scope> scopes_;
     };
 
 } // fela

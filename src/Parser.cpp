@@ -347,7 +347,7 @@ namespace fela
             //error here
         }
         consume_token();
-        //the problem is I can expect only one token type! not arbitrary amount, DO i make special "type_specifier" rule or something?
+
         expect_and_consume(TokenType::identifier, "err, stub");
         while (is_not_type(TokenType::close_group)) //here need to check if nested "()" exist somehow
         {

@@ -108,11 +108,11 @@ namespace fela
 
     struct AstFunctionDefinition : public AstFunction
     {
-    public:
+
         std::unique_ptr<AstBlockInstruction> body_ = nullptr;
     };
     struct AstProgram : public AstBase
     {
-        std::vector<AstBase*> nodes_;
+        std::vector<std::unique_ptr<AstBase>> nodes_;
     };
 } // fela

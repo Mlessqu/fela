@@ -28,7 +28,6 @@ namespace fela
         std::unique_ptr<AstInstruction> variable_declaration(DataType _type, std::string _identifier, std::unique_ptr<AstExpression> _init_value);
         std::unique_ptr<AstInstruction> block_instruction(std::vector<std::unique_ptr<AstInstruction>> _instructions);
 
-        std::unique_ptr<AstFunction> return_instruction(std::unique_ptr<AstExpression> _return_expr);
         std::unique_ptr<AstFunction> function_declaration(DataType _return_type,std::string _identifier, std::vector<VariableSymbol> _params);
         std::unique_ptr<AstFunction> function_definition(DataType _return_type, std::string _identifier,  std::vector<VariableSymbol> _params, std::unique_ptr<AstInstruction> _body);
 
