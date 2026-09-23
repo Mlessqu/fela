@@ -26,8 +26,7 @@ namespace fela
     private:
         //functions
         void parse_param_list();
-        void parse_function_declaration();
-        void parse_function_definition();
+        void parse_function();
 
         void parse_argument_list();
         void parse_function_call();

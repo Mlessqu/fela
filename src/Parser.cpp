@@ -64,9 +64,19 @@ namespace fela
         //entrypoint grammar here
         while (is_not_type(TokenType::eof))
         {
-            parse_function_definition();
-            parse_function_declaration();
-            parse_variable_declaration_instruction();
+            if (is_type_specifier_keyword())
+            {
+                if (look_ahead(2) == TokenType::open_group)
+                {
+                    parse_function();
+                }else
+                {
+                    parse_variable_declaration_instruction();
+                }
+            }else
+            {
+                //unexpected token at top level, error here
+            }
         }
     }
 
@@ -204,12 +214,14 @@ namespace fela
     {
         if (is_type(TokenType::identifier))
         {
-            auto ahead = look_ahead();
+            TokenType ahead = look_ahead();
             if (ahead == TokenType::open_group)
             {
                 parse_function_call();
+            }else
+            {
+                consume_token();
             }
-            consume_token();
         }
         if (is_type(TokenType::integer_literal) || is_type(TokenType::false_boolean) ||
             is_type(TokenType::true_boolean))
@@ -331,22 +343,21 @@ namespace fela
     }
 
 
-    void Parser::parse_function_declaration()
+
+
+    void Parser::parse_function()
     {
         consume_token();
-        expect_and_consume(TokenType::identifier, "err stub");
-
+        expect_and_consume(TokenType::identifier, "Expected function name");
         parse_param_list();
-        expect_and_consume(TokenType::semi, "err stub");
-    }
+        if (is_type(TokenType::open_scope))
+        {
+            parse_block_instruction();
+        }else
+        {
+            expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        }
 
-
-    void Parser::parse_function_definition()
-    {
-        consume_token();
-        expect_and_consume(TokenType::identifier, "err stub");
-        parse_param_list();
-        parse_block_instruction();
     }
 
 
