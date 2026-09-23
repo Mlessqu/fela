@@ -2,6 +2,8 @@
 #define FMT_HEADER_ONLY
 #include <fmt/format.h>
 
+#include "SemanticChecker.h++"
+
 namespace fela
 {
     const Token& Parser::get_current_token()
@@ -53,12 +55,12 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker* _sema) : tokens_(std::move(_tokens)), sema_(_sema)
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker* _sema) : tokens_(std::move(_tokens)), sema_(*_sema)
     {
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(&_sema)
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(_sema)
     {
     }
 
@@ -122,23 +124,27 @@ namespace fela
     std::unique_ptr<AstInstruction> Parser::parse_return_instruction()
     {
         auto ret_keyword= consume_token();
+        auto return_value = std::make_unique<AstExpression>();
         if (is_not_type(TokenType::semi))
         {
-             parse_expression();
+             return_value =parse_expression();
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
-        return nullptr;
+        auto return_node = std::make_unique<AstReturnInstruction>();
+        return_node->value_ = std::move(return_value);
+        return return_node;
     }
 
 
     std::unique_ptr<AstInstruction> Parser::parse_while_instruction()
     {
-        consume_token();
+        consume_token(); //while while(condition) { instructions}
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after while");
-        parse_expression();
+        auto while_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
-        parse_instruction();
-        return nullptr;
+        auto while_body = parse_instruction();
+        auto node_instruction = sema_.while_instruction(std::move(while_condition),std::move(while_body));
+        return node_instruction;
     }
 
 
@@ -146,29 +152,50 @@ namespace fela
     {
         consume_token();
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after if");
-        parse_expression();
+        auto if_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
-        parse_instruction();
+        auto then_body = parse_instruction();
+        std::unique_ptr<AstInstruction> optional_else = nullptr;
         if (is_type(TokenType::else_keyword))
         {
             consume_token();
-            parse_instruction();
+            optional_else = parse_instruction();
         }
-        return nullptr;
+        auto return_node = sema_.if_instruction(std::move(if_condition),std::move(then_body),std::move(optional_else));
+        return return_node;
+
     }
 
 
     std::unique_ptr<AstInstruction> Parser::parse_variable_declaration_instruction()
     {
-        consume_token();
+        auto declare_var_node = std::make_unique<AstVariableDeclaration>();
+
+        auto data_type = consume_token(); //type keyword
+        if (data_type.payload_ == "bool")
+        {
+            declare_var_node->type_ = DataType::bool_type;
+        }else if (data_type.payload_ == "int")
+        {
+            declare_var_node->type_ = DataType::int_type;
+
+        }else
+        {
+            declare_var_node->type_ = DataType::void_type;
+        }
+        auto id_token = get_current_token();
         expect_and_consume(TokenType::identifier, "Unexpected identifier syntax");
+        declare_var_node->identifier_ = id_token.payload_;
         if (is_type(TokenType::assign))
         {
             consume_token();
-            parse_expression();
+            declare_var_node->init_value_ = parse_expression();
+            expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+            return declare_var_node;
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
-        return nullptr;
+        declare_var_node->init_value_ = nullptr;
+        return declare_var_node;
     }
 
 
