@@ -11,40 +11,43 @@ namespace fela
     //layer 4 AstFunction
 
 
-    class AstBase
+    struct AstBase
     {
     public:
         virtual ~AstBase() = default;
     };
+
     //layer2
-    class AstExpression : public AstBase //value and type semantic check
+    struct AstExpression : public AstBase //value and type semantic check
     {
     public:
         DataType variable_type_;
     };
-    class AstLiteralExpression : public AstExpression
+
+    struct AstLiteralExpression : public AstExpression
     {
-        DataType type_;
         std::variant<bool, int> value_;
     };
-    class AstVariableExpression : public AstExpression
+
+    struct AstVariableExpression : public AstExpression
     {
-        DataType type_;
         std::string identifier_;
     };
-    class AstUnaryExpression : public AstExpression
+
+    struct AstUnaryExpression : public AstExpression
     {
         TokenType operator_;
         AstExpression* expression_ = nullptr;
     };
-    class AstBinaryExpression : public AstExpression
+
+    struct AstBinaryExpression : public AstExpression
     {
         TokenType operator_;
         AstExpression* lhs_ = nullptr;
         AstExpression* rhs_ = nullptr;
-
     };
-    class AstFunctionCall : public AstExpression
+
+    struct AstFunctionCall : public AstExpression
     {
         std::string identifier_;
         DataType return_type_;
@@ -52,54 +55,63 @@ namespace fela
     };
 
     //layer 3, executes instruction, no value produced
-    class AstInstruction : public AstBase
+    struct AstInstruction : public AstBase
     {
-
     };
-    class AstVariableDeclaration : public AstInstruction
+
+    struct AstVariableDeclaration : public AstInstruction
     {
         std::string identifier_;
         DataType type_;
-        AstExpression* init_value_= nullptr;
+        AstExpression* init_value_ = nullptr;
     };
-    class AstAssignInstruction : public AstInstruction
+
+    struct AstAssignInstruction : public AstInstruction
     {
     public:
         std::string identifier_;
         AstExpression* rhs_;
     };
-    class AstBlockInstruction : public AstInstruction
+
+    struct AstBlockInstruction : public AstInstruction
     {
     public:
         std::vector<AstInstruction*> block_instructions_;
     };
-    class AstIfInstruction : public AstInstruction
+
+    struct AstIfInstruction : public AstInstruction
     {
         AstExpression* condition_;
         AstInstruction* if_branch_;
         AstInstruction* else_branch_;
-
-            /// if(condition) { then } else { }
     };
-    class AstWhileInstruction : public AstInstruction
+
+    struct AstWhileInstruction : public AstInstruction
     {
         AstExpression* condition_;
         AstInstruction* body_;
     };
-
+    struct AstReturnInstruction : public AstInstruction
+    {
+        AstExpression* return_expression_= nullptr;
+    };
 
     //expression instruction (function call returning value for example)
     //layer 4,  functions
-    class AstFunction : public AstBase
+    struct AstFunction : public AstBase
     {
-
+        std::string identifier_;
+        DataType return_type_;
+        std::vector<VariableSymbol> parameters_;
     };
-    class AstFunctionDeclaration : public AstFunction
-    {
 
+    struct AstFunctionDeclaration : public AstFunction
+    {
     };
-    class AstFunctionDefinition : public AstFunction
-    {
 
+    struct AstFunctionDefinition : public AstFunction
+    {
+    public:
+        AstBlockInstruction* body_ = nullptr;
     };
 } // fela
