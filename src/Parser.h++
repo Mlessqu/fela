@@ -31,9 +31,9 @@ namespace fela
         //func helpers
         std::vector<DataType> parse_param_list();
         std::vector<DataType> parse_argument_list();
-        void parse_function();
+        std::unique_ptr<AstFunction> parse_function();
 
-        void parse_function_call();
+        std::unique_ptr<AstExpression> parse_function_call();
         //instructions
         std::unique_ptr<AstInstruction> parse_instruction();
         std::unique_ptr<AstInstruction> parse_return_instruction();
