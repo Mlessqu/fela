@@ -58,7 +58,7 @@ namespace fela
     }
 
 
-    void Parser::parse_program()
+    std::unique_ptr<AstProgram> Parser::parse_program()
     {
         //TODO: finish, cause not finished, might also need to update in EBNF specification if that's really what I want
         //entrypoint grammar here
@@ -78,43 +78,44 @@ namespace fela
                 //unexpected token at top level, error here
             }
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_instruction()
     {
         if (is_type(TokenType::return_keyword))
         {
-            parse_return_instruction();
+            return parse_return_instruction();
         }
         else if (is_type(TokenType::if_keyword))
         {
-            parse_if_instruction();
+            return parse_if_instruction();
         }
         else if (is_type(TokenType::while_keyword))
         {
-            parse_while_instruction();
+            return parse_while_instruction();
         }
         else if (is_type(TokenType::open_scope))
         {
-            parse_block_instruction();
+            return parse_block_instruction();
         }
         else if (is_type(TokenType::type_int) || is_type(TokenType::type_bool))
         {
-            parse_variable_declaration_instruction();
+            return parse_variable_declaration_instruction();
         }
         else if (is_type(TokenType::identifier) && look_ahead(1) == TokenType::assign)
         {
-            parse_assign_instruction();
+            return parse_assign_instruction();
         }
         else
         {
-            parse_primary_instruction();
+            return parse_primary_instruction();
         }
     }
 
 
-    void Parser::parse_return_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_return_instruction()
     {
         consume_token();
         if (is_not_type(TokenType::semi))
@@ -122,20 +123,22 @@ namespace fela
             parse_expression();
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        return nullptr;
     }
 
 
-    void Parser::parse_while_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_while_instruction()
     {
         consume_token();
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after while");
         parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         parse_instruction();
+        return nullptr;
     }
 
 
-    void Parser::parse_if_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_if_instruction()
     {
         consume_token();
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after if");
@@ -147,10 +150,11 @@ namespace fela
             consume_token();
             parse_instruction();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_variable_declaration_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_variable_declaration_instruction()
     {
         consume_token();
         expect_and_consume(TokenType::identifier, "Unexpected identifier syntax");
@@ -160,10 +164,11 @@ namespace fela
             parse_expression();
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        return nullptr;
     }
 
 
-    void Parser::parse_block_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_block_instruction()
     {
         consume_token();
         while (is_not_type(TokenType::close_scope) && is_not_type(TokenType::eof))
@@ -171,28 +176,31 @@ namespace fela
             parse_instruction();
         }
         expect_and_consume(TokenType::close_scope, expected_diff_symbol_error("}"));
+        return nullptr;
     }
 
 
-    void Parser::parse_assign_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_assign_instruction()
     {
         consume_token();
         consume_token();
         parse_expression();
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        return nullptr;
     }
 
 
-    void Parser::parse_primary_instruction()
+    std::unique_ptr<AstInstruction> Parser::parse_primary_instruction()
     {
         parse_expression();
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        return nullptr;
     }
 
 
-    void Parser::parse_expression()
+    std::unique_ptr<AstExpression> Parser::parse_expression()
     {
-        parse_boolean_logic_or_expression();
+        return parse_boolean_logic_or_expression();
     }
 
 
@@ -207,15 +215,16 @@ namespace fela
     }
 
 
-    void Parser::parse_grouped_expression()
+    std::unique_ptr<AstExpression> Parser::parse_grouped_expression()
     {
         consume_token();
         parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
+        return nullptr;
     }
 
 
-    void Parser::parse_primary_expression()
+    std::unique_ptr<AstExpression> Parser::parse_primary_expression()
     {
         if (is_type(TokenType::identifier))
         {
@@ -237,20 +246,22 @@ namespace fela
         {
             parse_grouped_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_unary_expression()
+    std::unique_ptr<AstExpression> Parser::parse_unary_expression()
     {
         while (is_type(TokenType::plus) || is_type(TokenType::minus) || is_type(TokenType::negation_op))
         {
             consume_token();
         }
         parse_primary_expression();
+        return nullptr;
     }
 
 
-    void Parser::parse_multiplying_expression()
+    std::unique_ptr<AstExpression> Parser::parse_multiplying_expression()
     {
         parse_unary_expression();
         while (is_type(TokenType::multiply_op) || is_type(TokenType::divide_op))
@@ -258,10 +269,11 @@ namespace fela
             consume_token();
             parse_unary_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_additive_expression()
+    std::unique_ptr<AstExpression> Parser::parse_additive_expression()
     {
         parse_multiplying_expression();
         while (is_type(TokenType::minus) || is_type(TokenType::plus))
@@ -269,10 +281,11 @@ namespace fela
             consume_token();
             parse_multiplying_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_relational_expression()
+    std::unique_ptr<AstExpression> Parser::parse_relational_expression()
     {
         parse_additive_expression();
         while (is_type(TokenType::smaller_op) || is_type(TokenType::greater_op))
@@ -280,10 +293,11 @@ namespace fela
             consume_token();
             parse_additive_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_equality_expression()
+    std::unique_ptr<AstExpression> Parser::parse_equality_expression()
     {
         parse_relational_expression();
         while (is_type(TokenType::equal_op) || is_type(TokenType::not_equal_op))
@@ -291,10 +305,11 @@ namespace fela
             consume_token();
             parse_relational_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_boolean_logic_and_expression()
+    std::unique_ptr<AstExpression> Parser::parse_boolean_logic_and_expression()
     {
         parse_equality_expression();
         while (is_type(TokenType::and_op))
@@ -302,10 +317,11 @@ namespace fela
             consume_token();
             parse_equality_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_boolean_logic_or_expression()
+    std::unique_ptr<AstExpression> Parser::parse_boolean_logic_or_expression()
     {
         parse_boolean_logic_and_expression();
         while (is_type(TokenType::or_op))
@@ -313,10 +329,11 @@ namespace fela
             consume_token();
             parse_boolean_logic_and_expression();
         }
+        return nullptr;
     }
 
 
-    void Parser::parse_param_list()
+    std::vector<DataType> Parser::parse_param_list()
     {
         consume_token();
         //check if paramlist empty
@@ -350,7 +367,7 @@ namespace fela
 
 
 
-    void Parser::parse_function()
+    std::unique_ptr<AstFunction> Parser::parse_function()
     {
         consume_token();
         expect_and_consume(TokenType::identifier, "Expected function name");
@@ -362,11 +379,11 @@ namespace fela
         {
             expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         }
-
+        return nullptr;
     }
 
 
-    std::vector<DataType> Parser::parse_argument_list()
+    std::vector<AstExpression*> Parser::parse_argument_list()
     {
         consume_token();
         if (is_not_type(TokenType::close_group))
@@ -379,6 +396,7 @@ namespace fela
             parse_expression();
         }
         consume_token();
+        return {};
     }
 
 
@@ -391,10 +409,11 @@ namespace fela
     }
 
 
-    void Parser::parse_function_call()
+    std::unique_ptr<AstExpression> Parser::parse_function_call()
     {
         expect_and_consume(TokenType::identifier, "err stub");
         parse_argument_list();
+        return nullptr;
     }
 
 
