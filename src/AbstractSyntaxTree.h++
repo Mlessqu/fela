@@ -96,8 +96,6 @@ namespace fela
         AstExpression* return_expression_= nullptr;
     };
 
-    //expression instruction (function call returning value for example)
-    //layer 4,  functions
     struct AstFunction : public AstBase
     {
         std::string identifier_;
@@ -113,5 +111,9 @@ namespace fela
     {
     public:
         AstBlockInstruction* body_ = nullptr;
+    };
+    struct AstProgram : public AstBase
+    {
+        std::vector<AstBase*> nodes_;
     };
 } // fela
