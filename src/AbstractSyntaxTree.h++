@@ -21,7 +21,6 @@ namespace fela
     //layer2
     struct AstExpression : public AstBase //value and type semantic check
     {
-
         DataType resolved_type_;
     };
 

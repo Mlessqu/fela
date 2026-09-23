@@ -165,13 +165,27 @@ namespace fela
             return nullptr;
         }
         auto function_call = symbol_table_.find(_identifier);
-        auto params = std::get<FunctionSymbol>(function_call->second.symbol_signature_).param_types_;
-        for (int i=0;i< _arguments.size();++i)
+        if (!std::holds_alternative<FunctionSymbol>(function_call->second.symbol_signature_))
         {
-            if (_arguments[i]->resolved_type_ == params[i]) continue;
-            //error wrong argument type/mismatch!
             return nullptr;
         }
+        auto params = std::get<FunctionSymbol>(function_call->second.symbol_signature_).param_types_;
+        if (params.size()!= _arguments.size())
+        {
+            return nullptr;
+        }
+        for (int i=0;i< _arguments.size();++i)
+        {
+            if (_arguments[i]->resolved_type_ == params[i])
+            {
+                continue;
+            }else
+            {
+                return nullptr;
+            }
+            //error wrong argument type/mismatch!
+        }
+        //here we call function
     }
 
 
