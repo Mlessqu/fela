@@ -1,6 +1,8 @@
 #pragma once
+#include <memory>
 #include <vector>
 
+#include "AbstractSyntaxTree.h++"
 #include "Lexer.h++"
 #include "SymbolTable.h++"
 // so the parser will be responsible for checking grammar correctness syntax,
@@ -23,7 +25,7 @@ namespace fela
         std::string expected_diff_symbol_error(std::string_view _expected);
     public:
         explicit Parser(std::vector<Token> _tokens);
-        void parse_program();
+        std::unique_ptr<AstProgram> parse_program();
     private:
         //functions
         //func helpers
@@ -33,25 +35,25 @@ namespace fela
 
         void parse_function_call();
         //instructions
-        void parse_instruction();
-        void parse_return_instruction();
-        void parse_while_instruction();
-        void parse_if_instruction();
-        void parse_variable_declaration_instruction();
-        void parse_block_instruction();
-        void parse_assign_instruction();
-        void parse_primary_instruction();
+        std::unique_ptr<AstInstruction> parse_instruction();
+        std::unique_ptr<AstInstruction> parse_return_instruction();
+        std::unique_ptr<AstInstruction> parse_while_instruction();
+        std::unique_ptr<AstInstruction> parse_if_instruction();
+        std::unique_ptr<AstInstruction> parse_variable_declaration_instruction();
+        std::unique_ptr<AstInstruction> parse_block_instruction();
+        std::unique_ptr<AstInstruction> parse_assign_instruction();
+        std::unique_ptr<AstInstruction> parse_primary_instruction();
         //expressions
-        void parse_expression();
-        void parse_grouped_expression();
-        void parse_primary_expression();
-        void parse_unary_expression();
-        void parse_multiplying_expression();
-        void parse_additive_expression();
-        void parse_relational_expression();
-        void parse_equality_expression();
-        void parse_boolean_logic_and_expression();
-        void parse_boolean_logic_or_expression();
+        std::unique_ptr<AstExpression> parse_expression();
+        std::unique_ptr<AstExpression> parse_grouped_expression();
+        std::unique_ptr<AstExpression> parse_primary_expression();
+        std::unique_ptr<AstExpression> parse_unary_expression();
+        std::unique_ptr<AstExpression> parse_multiplying_expression();
+        std::unique_ptr<AstExpression> parse_additive_expression();
+        std::unique_ptr<AstExpression> parse_relational_expression();
+        std::unique_ptr<AstExpression> parse_equality_expression();
+        std::unique_ptr<AstExpression> parse_boolean_logic_and_expression();
+        std::unique_ptr<AstExpression> parse_boolean_logic_or_expression();
 
     };
 } // fela
