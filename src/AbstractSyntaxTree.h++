@@ -14,7 +14,7 @@ namespace fela
     class AstBase
     {
     public:
-        AstBase();
+        virtual ~AstBase() = default;
     };
     //layer2
     class AstExpression : public AstBase //value and type semantic check
@@ -31,45 +31,74 @@ namespace fela
     {
         DataType type_;
         std::string identifier_;
-        std::variant<bool, int> value_;
     };
     class AstUnaryExpression : public AstExpression
     {
         TokenType operator_;
-        std::variant<bool, int> value_;
+        AstExpression* expression_ = nullptr;
     };
     class AstBinaryExpression : public AstExpression
     {
         TokenType operator_;
-        std::variant<bool, int> lhs_;
-        std::variant<bool, int> rhs_;
+        AstExpression* lhs_ = nullptr;
+        AstExpression* rhs_ = nullptr;
 
     };
     class AstFunctionCall : public AstExpression
     {
         std::string identifier_;
         DataType return_type_;
-        std::vector<DataType> arguments_;
+        std::vector<AstExpression*> arguments_;
     };
-    //literal -> bool/int literal
-    //variable expr -> read variable by name
-    //unary expr -> op + expr
-    //binary expr -> lh_exp + op + rh_exp
-    //Call func expr -> look up symbol -> validate arg list correctness
 
     //layer 3, executes instruction, no value produced
     class AstInstruction : public AstBase
     {
 
     };
-    //variable decl
-    //assign
-    //block of instruction {...}
-    //if instruction
-    //while instruction
+    class AstVariableDeclaration : public AstInstruction
+    {
+        std::string identifier_;
+        DataType type_;
+        AstExpression* init_value_= nullptr;
+    };
+    class AstAssignInstruction : public AstInstruction
+    {
+    public:
+        std::string identifier_;
+        AstExpression* rhs_;
+    };
+    class AstBlockInstruction : public AstInstruction
+    {
+    public:
+        std::vector<AstInstruction*> block_instructions_;
+    };
+    class AstIfInstruction : public AstInstruction
+    {
+        AstExpression* condition_;
+        AstInstruction* if_branch_;
+        AstInstruction* else_branch_;
+
+            /// if(condition) { then } else { }
+    };
+    class AstWhileInstruction : public AstInstruction
+    {
+        AstExpression* condition_;
+        AstInstruction* body_;
+    };
+
+
     //expression instruction (function call returning value for example)
     //layer 4,  functions
     class AstFunction : public AstBase
+    {
+
+    };
+    class AstFunctionDeclaration : public AstFunction
+    {
+
+    };
+    class AstFunctionDefinition : public AstFunction
     {
 
     };
