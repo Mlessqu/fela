@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "Lexer.h++"
+#include "SymbolTable.h++"
 // so the parser will be responsible for checking grammar correctness syntax,
 //no ast just syntax
 namespace fela
@@ -26,8 +27,8 @@ namespace fela
     private:
         //functions
         //func helpers
-        void parse_param_list();
-        void parse_argument_list();
+        std::vector<DataType> parse_param_list();
+        std::vector<DataType> parse_argument_list();
         void parse_function();
 
         void parse_function_call();

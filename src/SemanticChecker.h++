@@ -1,4 +1,8 @@
 #pragma once
+#include <unordered_map>
+#include <unordered_set>
+
+#include "SymbolTable.h++"
 
 namespace fela
 {
@@ -15,6 +19,7 @@ class AstInstruction;
         AstInstruction* if_instruction();
         AstInstruction* while_instruction();
         AstInstruction* assign_instruction();
-
+    private:
+        std::pmr::unordered_set<Symbol> symbol_table_;
     };
 } // fela

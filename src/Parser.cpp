@@ -366,7 +366,7 @@ namespace fela
     }
 
 
-    void Parser::parse_argument_list()
+    std::vector<__resharper_unknown_type> Parser::parse_argument_list()
     {
         consume_token();
         if (is_not_type(TokenType::close_group))
