@@ -159,6 +159,19 @@ namespace fela
                                                                   std::vector<std::unique_ptr<AstExpression>>
                                                                   _arguments)
     {
+        if (this->symbol_table_.find(_identifier)== symbol_table_.end())
+        {
+            //nie ma takiej funckji nawet!
+            return nullptr;
+        }
+        auto function_call = symbol_table_.find(_identifier);
+        auto params = std::get<FunctionSymbol>(function_call->second.symbol_signature_).param_types_;
+        for (int i=0;i< _arguments.size();++i)
+        {
+            if (_arguments[i]->resolved_type_ == params[i]) continue;
+            //error wrong argument type/mismatch!
+            return nullptr;
+        }
     }
 
 

@@ -20,13 +20,14 @@ namespace fela
         bool is_type(TokenType _type);
         bool is_not_type(TokenType _type);
         bool is_type_specifier_keyword();
-        const TokenType& look_ahead(size_t _offset);
+        TokenType look_ahead(size_t _offset = 1);
         //advances cursor
-        const Token& consume_token();
+        const Token consume_token();
         bool expect_and_consume(TokenType _expected_type, std::string _error_message);
         std::string expected_diff_symbol_error(std::string_view _expected);
-        SemanticChecker& sema_;
+        SemanticChecker* sema_ = nullptr;
     public:
+        explicit Parser(std::vector<Token> _tokens, SemanticChecker* _sema = nullptr);
         explicit Parser(std::vector<Token> _tokens, SemanticChecker& _sema);
         std::unique_ptr<AstProgram> parse_program();
     private:

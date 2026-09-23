@@ -22,7 +22,7 @@ namespace fela
     }
 
 
-    const Token& Parser::consume_token()
+    const Token Parser::consume_token()
     {
         const Token& token = tokens_[cursor_];
         if (token.type_ != TokenType::eof)
@@ -53,15 +53,18 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(_tokens), sema_(_sema)
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker* _sema) : tokens_(std::move(_tokens)), sema_(_sema)
+    {
+    }
+
+
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(&_sema)
     {
     }
 
 
     std::unique_ptr<AstProgram> Parser::parse_program()
     {
-        //TODO: finish, cause not finished, might also need to update in EBNF specification if that's really what I want
-        //entrypoint grammar here
         while (is_not_type(TokenType::eof))
         {
             if (is_type_specifier_keyword())
@@ -76,7 +79,7 @@ namespace fela
             }else
             {
                 auto invalid_token = consume_token();
-                //unexpected token at top level, error here
+                return nullptr;
             }
         }
         return nullptr;
@@ -205,7 +208,7 @@ namespace fela
     }
 
 
-    const TokenType& Parser::look_ahead(size_t _offset = 1)
+    TokenType Parser::look_ahead(size_t _offset)
     {
         const size_t assumed_size = cursor_ + _offset;
         if (assumed_size >= tokens_.size())
@@ -334,32 +337,57 @@ namespace fela
     }
 
 
+    static DataType token_type_to_data_type(TokenType _type)
+    {
+        switch (_type)
+        {
+            case TokenType::type_int: return DataType::int_type;
+            case TokenType::type_bool: return DataType::bool_type;
+            case TokenType::type_void: return DataType::void_type;
+            default: return DataType::void_type;
+        }
+    }
+
+
     std::vector<VariableSymbol> Parser::parse_param_list()
     {
-        consume_token();
-        //check if paramlist empty
+        std::vector<VariableSymbol> param_list;
+        expect_and_consume(TokenType::open_group, expected_diff_symbol_error("("));
+
+        // empty param list ()
         if (is_type(TokenType::close_group))
         {
             consume_token();
+            return param_list;
         }
-        if (!is_type_specifier_keyword())
-        {
-            //error here
-        }
-        consume_token();
 
-        expect_and_consume(TokenType::identifier, "err, stub");
-        while (is_not_type(TokenType::close_group)) //here need to check if nested "()" exist somehow
+        while (true)
         {
-            expect_and_consume(TokenType::coma, "err stub");
             if (!is_type_specifier_keyword())
             {
-                //syntax error
+                break;
             }
-            consume_token();
-            expect_and_consume(TokenType::identifier, "err stub");
+            const Token type_token = consume_token();
+            const Token name_token = get_current_token();
+            expect_and_consume(TokenType::identifier, expected_diff_symbol_error("identifier"));
+
+            param_list.push_back(VariableSymbol{
+                .name_ = std::string(name_token.payload_),
+                .type_ = token_type_to_data_type(type_token.type_)
+            });
+
+            if (is_type(TokenType::coma))
+            {
+                consume_token();
+            }
+            else
+            {
+                break;
+            }
         }
-        consume_token();
+
+        expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
+        return param_list;
     }
 
 
