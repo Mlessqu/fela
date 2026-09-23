@@ -422,7 +422,7 @@ namespace fela
     }
 
 
-    std::vector<AstExpression*> Parser::parse_argument_list()
+    std::vector<std::unique_ptr<AstExpression>> Parser::parse_argument_list()
     {
         consume_token();
         if (is_not_type(TokenType::close_group))

@@ -34,7 +34,7 @@ namespace fela
         //functions
         //func helpers
         std::vector<VariableSymbol> parse_param_list();
-        std::vector<AstExpression*> parse_argument_list();
+        std::vector<std::unique_ptr<AstExpression>> parse_argument_list();
         std::unique_ptr<AstFunction> parse_function();
 
         std::unique_ptr<AstExpression> parse_function_call();
