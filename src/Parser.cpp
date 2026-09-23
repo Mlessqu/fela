@@ -64,7 +64,9 @@ namespace fela
         //entrypoint grammar here
         while (is_not_type(TokenType::eof))
         {
-            parse_instruction();
+            parse_function_definition();
+            parse_function_declaration();
+            parse_variable_declaration_instruction();
         }
     }
 
@@ -303,11 +305,14 @@ namespace fela
         //check if paramlist empty
         if (is_type(TokenType::close_group))
         {
+            consume_token();
             return;
         }
         if (!is_type_specifier_keyword())
         {
+
             //error here!
+            return;
         }
         consume_token();
         //the problem is I can expect only one token type! not arbitrary amount, DO i make special "type_specifier" rule or something?
