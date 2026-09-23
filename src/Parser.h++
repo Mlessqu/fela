@@ -9,6 +9,8 @@
 //no ast just syntax
 namespace fela
 {
+    class SemanticChecker;
+
     class Parser
     {
         std::vector<Token> tokens_;
@@ -23,8 +25,9 @@ namespace fela
         const Token& consume_token();
         bool expect_and_consume(TokenType _expected_type, std::string _error_message);
         std::string expected_diff_symbol_error(std::string_view _expected);
+        SemanticChecker& sema_;
     public:
-        explicit Parser(std::vector<Token> _tokens);
+        explicit Parser(std::vector<Token> _tokens, SemanticChecker& _sema);
         std::unique_ptr<AstProgram> parse_program();
     private:
         //functions

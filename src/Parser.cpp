@@ -53,7 +53,7 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens) : tokens_(_tokens)
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(_tokens), sema_(_sema)
     {
     }
 
@@ -340,13 +340,13 @@ namespace fela
         if (is_type(TokenType::close_group))
         {
             consume_token();
-            return;
+
         }
         if (!is_type_specifier_keyword())
         {
 
             //error here!
-            return;
+
         }
         consume_token();
         //the problem is I can expect only one token type! not arbitrary amount, DO i make special "type_specifier" rule or something?
