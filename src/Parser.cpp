@@ -198,6 +198,11 @@ namespace fela
 
     const TokenType& Parser::look_ahead(size_t _offset = 1)
     {
+        const size_t assumed_size = cursor_ + _offset;
+        if (assumed_size >= tokens_.size())
+        {
+            return TokenType::eof;
+        }
         return tokens_[cursor_ + _offset].type_;
     }
 

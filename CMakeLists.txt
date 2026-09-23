@@ -14,6 +14,7 @@ add_executable(fela
 add_executable(fela_tests
         tests/test_lexer.cpp
         src/Lexer.cpp
-        src/Lexer.h++)
+        src/Lexer.h++
+        tests/test_parser.cpp)
 target_include_directories(fela_tests PRIVATE src)
 
