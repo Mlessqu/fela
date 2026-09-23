@@ -9,7 +9,23 @@ namespace fela
     //layer 4 AstFunction
 
 
-    class AstNode
+    class AstNodeBase
+    {
+    public:
+        AstNodeBase();
+    };
+    //layer2
+    class AstNodeExpression : public AstNodeBase //value and type semantic check
+    {
+
+    };
+    //layer 3, executes instruction, no value produced
+    class AstNodeInstruction : public AstNodeBase
+    {
+
+    };
+    //layer 4,  functions
+    class AstNodeFunction : public AstNodeBase
     {
 
     };
