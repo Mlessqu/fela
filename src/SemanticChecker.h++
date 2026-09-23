@@ -5,6 +5,7 @@
 
 namespace fela
 {
+    struct AstFunction;
     enum class TokenType;
     class AstExpression;
     class AstInstruction;
@@ -25,9 +26,10 @@ namespace fela
         AstInstruction* assign_instruction(TokenType _operator, std::string _identifier, AstExpression* _rhs);
         AstInstruction* variable_declaration(DataType _type, std::string _identifier, AstExpression* _init_value);
         AstInstruction* block_instruction(std::vector<AstInstruction*> _instructions);
-        AstInstruction* return_instruction(AstExpression* _return_expr);
-        AstInstruction* function_declaration(DataType _return_type,std::string _identifier, std::vector<VariableSymbol> _params);
-        AstInstruction* function_definition(DataType _return_type, std::string _identifier,  std::vector<VariableSymbol> _params);
+
+        AstFunction* return_instruction(AstExpression* _return_expr);
+        AstFunction* function_declaration(DataType _return_type,std::string _identifier, std::vector<VariableSymbol> _params);
+        AstFunction* function_definition(DataType _return_type, std::string _identifier,  std::vector<VariableSymbol> _params, AstInstruction* _body);
 
         //function call
         //function def
