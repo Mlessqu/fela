@@ -1,15 +1,16 @@
 #include <iostream>
 
 #include"Lexer.h++"
+#include "Parser.h++"
+#include "SemanticChecker.h++"
+
+
 int main(int _args, char** _arg_vals)
 {
- fela::Lexer lexer;
+    fela::Lexer lexer;
     lexer.load_file("fela.txt");
-    fela::Token current_token{.type_ = fela::TokenType::unknown,0,0,std::string_view{}};
-    while (current_token.type_ != fela::TokenType::eof)
-    {
-        current_token = lexer.next_token();
-        std::cout << current_token.payload_;
-    }
+    auto tokens = lexer.tokenize();
+    fela::SemanticChecker sema;
+    fela::Parser parser(tokens,sema);
     return 0;
 }

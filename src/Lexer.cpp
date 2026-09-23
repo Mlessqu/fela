@@ -2,13 +2,19 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 
 namespace fela
 {
     bool Lexer::load_file(std::string _file_path)
     {
         std::ifstream file(_file_path, std::ios::binary);
-        if (!file.is_open()) return false;
+        if (!file.is_open())
+        {
+            std::cerr << "Failed to load file!";
+            return false;
+        }
+
         auto file_size = std::filesystem::file_size(_file_path);
         source_code_.resize(file_size);
         if (!file.read(source_code_.data(), file_size)) return false;
@@ -81,6 +87,10 @@ namespace fela
         //skip whitespaces and comments
         while (true)
         {
+            if (cursor_ == nullptr)
+            {
+                return Token{TokenType::eof, line_, 0, {}};
+            }
             if (*cursor_ == ' ' || *cursor_ == '\t' || *cursor_ == '\r' || *cursor_ == '\n')
             {
                 if (*cursor_ == '\n')
@@ -258,6 +268,29 @@ namespace fela
         }
         cursor_++;
         return Token{TokenType::unknown, line_, column, {tok_start, 1}};
+    }
+
+
+    std::vector<Token> Lexer::tokenize()
+    {
+        std::vector<Token> tokens;
+        while (true)
+        {
+            Token tok = next_token();
+            tokens.push_back(tok);
+            if (tok.type_ == TokenType::eof)
+            {
+                break;
+            }
+        }
+        return tokens;
+    }
+
+
+    std::vector<Token> Lexer::tokenize(std::string _source)
+    {
+        load_source(std::move(_source));
+        return tokenize();
     }
 
 

@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace fela
 {
@@ -79,6 +80,8 @@ namespace fela
             line_ = DEFAULT_START_LINE;
         }
         Token next_token();
+        std::vector<Token> tokenize();
+        std::vector<Token> tokenize(std::string _source);
     private:
 
         bool is_digit(char _c);
