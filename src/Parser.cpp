@@ -395,9 +395,12 @@ namespace fela
 
     std::unique_ptr<AstFunction> Parser::parse_function()
     {
+        auto function_node = std::make_unique<AstFunction>();
         consume_token();
+        function_node->identifier_;
+        function_node->return_type_; //I think I deleted return parsing?
         expect_and_consume(TokenType::identifier, "Expected function name");
-        parse_param_list();
+        function_node->parameters_ = parse_param_list();
         if (is_type(TokenType::open_scope))
         {
             parse_block_instruction();
@@ -405,7 +408,7 @@ namespace fela
         {
             expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         }
-        return nullptr;
+
     }
 
 
