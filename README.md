@@ -7,14 +7,16 @@ Write initial language spec using EBNF - done
 write micro subset of C using ENBF -done
 Research and write lexer skeleton - done
 write lexer - done
-
-
-boring unit tests for lexer - done  by AI (mostly)
+boring unit tests for lexer - done  by AI 
 Research and write parser skeleton. - done
+write parser - done
+boring unit tests for parser - done  by AI
 
 
-So clang does it with parser and sema. 
-Parser - checks grammard
-AST building is delegated to sema
+
+
+
+
 Current goals: 
-Code parser that can check grammar.
+Code semantic checker that can generate AST tree
+Research how clang implements sema and AST.
