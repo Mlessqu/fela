@@ -5,15 +5,16 @@
 
 namespace fela
 {
+    enum class TokenType;
     class AstExpression;
 class AstInstruction;
     class SemanticChecker
     {
     public:
         AstExpression* literal_expression(AstExpression* _literal_expr);
-        AstExpression* variable_expression();
-        AstExpression* unary_operation();
-        AstExpression* binary_operation();
+        AstExpression* variable_expression(std::string _name_identifier);
+        AstExpression* unary_operation(TokenType _operator);
+        AstExpression* binary_operation(TokenType _operator);
 
         AstInstruction* if_instruction();
         AstInstruction* while_instruction();

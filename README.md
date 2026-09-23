@@ -12,6 +12,7 @@ Research and write parser skeleton. - done
 write parser - done
 boring unit tests for parser - done  by AI
 Research how clang implements sema and AST.-done
+define some initial ast tree data structure - done
 
 
 
