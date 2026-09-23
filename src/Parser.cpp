@@ -75,7 +75,7 @@ namespace fela
                 }
             }else
             {
-                consume_token();
+                auto invalid_token = consume_token();
                 //unexpected token at top level, error here
             }
         }
@@ -118,10 +118,10 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_return_instruction()
     {
-        consume_token();
+        auto ret_keyword= consume_token();
         if (is_not_type(TokenType::semi))
         {
-            parse_expression();
+             parse_expression();
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         return nullptr;
@@ -241,7 +241,7 @@ namespace fela
         if (is_type(TokenType::integer_literal) || is_type(TokenType::false_boolean) ||
             is_type(TokenType::true_boolean))
         {
-            consume_token();
+           auto token =consume_token();
         }
         if (is_type(TokenType::open_group))
         {
@@ -334,7 +334,7 @@ namespace fela
     }
 
 
-    std::vector<DataType> Parser::parse_param_list()
+    std::vector<VariableSymbol> Parser::parse_param_list()
     {
         consume_token();
         //check if paramlist empty

@@ -1,4 +1,6 @@
 #pragma once
+#include <memory>
+
 #include "Lexer.h++"
 #include "SymbolTable.h++"
 
@@ -13,15 +15,14 @@ namespace fela
 
     struct AstBase
     {
-    public:
         virtual ~AstBase() = default;
     };
 
     //layer2
     struct AstExpression : public AstBase //value and type semantic check
     {
-    public:
-        DataType variable_type_;
+
+        DataType resolved_type_;
     };
 
     struct AstLiteralExpression : public AstExpression
@@ -37,21 +38,20 @@ namespace fela
     struct AstUnaryExpression : public AstExpression
     {
         TokenType operator_;
-        AstExpression* expression_ = nullptr;
+        std::unique_ptr<AstExpression> operand_ = nullptr;
     };
 
     struct AstBinaryExpression : public AstExpression
     {
         TokenType operator_;
-        AstExpression* lhs_ = nullptr;
-        AstExpression* rhs_ = nullptr;
+        std::unique_ptr<AstExpression> lhs_ = nullptr;
+        std::unique_ptr<AstExpression> rhs_ = nullptr;
     };
 
     struct AstFunctionCall : public AstExpression
     {
         std::string identifier_;
-        DataType return_type_;
-        std::vector<AstExpression*> arguments_;
+        std::vector<std::unique_ptr<AstExpression>> arguments_;
     };
 
     //layer 3, executes instruction, no value produced
@@ -63,37 +63,36 @@ namespace fela
     {
         std::string identifier_;
         DataType type_;
-        AstExpression* init_value_ = nullptr;
+        std::unique_ptr<AstExpression> init_value_ = nullptr;
     };
 
     struct AstAssignInstruction : public AstInstruction
     {
-    public:
         std::string identifier_;
-        AstExpression* rhs_;
+        std::unique_ptr<AstExpression> rhs_;
     };
 
     struct AstBlockInstruction : public AstInstruction
     {
-    public:
-        std::vector<AstInstruction*> block_instructions_;
+    
+        std::vector<std::unique_ptr<AstInstruction>> body_;
     };
 
     struct AstIfInstruction : public AstInstruction
     {
-        AstExpression* condition_;
-        AstInstruction* if_branch_;
-        AstInstruction* else_branch_;
+        std::unique_ptr<AstExpression> condition_;
+        std::unique_ptr<AstInstruction> then_;
+        std::unique_ptr<AstInstruction> else_branch_;
     };
 
     struct AstWhileInstruction : public AstInstruction
     {
-        AstExpression* condition_;
-        AstInstruction* body_;
+        std::unique_ptr<AstExpression> condition_;
+        std::unique_ptr<AstInstruction> body_;
     };
     struct AstReturnInstruction : public AstInstruction
     {
-        AstExpression* return_expression_= nullptr;
+        std::unique_ptr<AstExpression> value_ = nullptr;
     };
 
     struct AstFunction : public AstBase
@@ -110,7 +109,7 @@ namespace fela
     struct AstFunctionDefinition : public AstFunction
     {
     public:
-        AstBlockInstruction* body_ = nullptr;
+        std::unique_ptr<AstBlockInstruction> body_ = nullptr;
     };
     struct AstProgram : public AstBase
     {

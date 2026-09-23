@@ -8,11 +8,6 @@ namespace fela
     //need data structure where we keep info of symbols read by parser
     //then semantic checker can construct nodes from this data if valid of course
 
-    enum class SymbolType
-    {
-        variable,
-        function
-    };
     enum class DataType
     {
         int_type,
@@ -30,9 +25,7 @@ namespace fela
     };
     struct Symbol
     {
-        std::string identifier_;
-        SymbolType symbol_type_;
-        std::variant<VariableSymbol,FunctionSymbol> symbol_signature_;
+        std::variant<VariableSymbol, FunctionSymbol> symbol_signature_;
     };
 
 } // fela

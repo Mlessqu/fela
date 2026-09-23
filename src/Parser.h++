@@ -32,7 +32,7 @@ namespace fela
     private:
         //functions
         //func helpers
-        std::vector<DataType> parse_param_list();
+        std::vector<VariableSymbol> parse_param_list();
         std::vector<AstExpression*> parse_argument_list();
         std::unique_ptr<AstFunction> parse_function();
 

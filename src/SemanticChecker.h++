@@ -16,7 +16,7 @@ namespace fela
     public:
         std::unique_ptr<AstExpression> literal_expression(std::variant<bool, int> _literal_expr);
         std::unique_ptr<AstExpression> variable_expression(std::string _name_identifier);
-        std::unique_ptr<AstExpression> unary_operation(TokenType _operator, std::unique_ptr<AstExpression> _lhs);
+        std::unique_ptr<AstExpression> unary_operation(TokenType _operator, std::unique_ptr<AstExpression> _unary_expression);
         std::unique_ptr<AstExpression> binary_operation(TokenType _operator, std::unique_ptr<AstExpression> _lhs, std::unique_ptr<AstExpression> _rhs);
         std::unique_ptr<AstExpression> function_call(std::string _identifier, std::vector<std::unique_ptr<AstExpression>> _arguments);
 

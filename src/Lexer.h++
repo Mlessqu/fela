@@ -17,7 +17,6 @@ namespace fela
         coma,
         //literals
         integer_literal,
-        boolean_literal,
         false_boolean,
         true_boolean,
         //types
