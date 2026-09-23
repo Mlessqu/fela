@@ -395,20 +395,30 @@ namespace fela
 
     std::unique_ptr<AstFunction> Parser::parse_function()
     {
-        auto function_node = std::make_unique<AstFunction>();
-        consume_token();
-        function_node->identifier_;
-        function_node->return_type_; //I think I deleted return parsing?
+        Token return_type = consume_token();
+        Token identifier_token = get_current_token();
         expect_and_consume(TokenType::identifier, "Expected function name");
-        function_node->parameters_ = parse_param_list();
+        std::string function_name = std::string(identifier_token.payload_);
+        std::vector<VariableSymbol> params = parse_param_list();
+
         if (is_type(TokenType::open_scope))
         {
+            auto function_def = std::make_unique<AstFunctionDefinition>();
+            function_def->identifier_ = function_name;
+            function_def->return_type_ = token_type_to_data_type(return_type.type_);
+            function_def->parameters_ = std::move(params);
             parse_block_instruction();
-        }else
+            return function_def;
+        }
+        else
         {
             expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+            auto function_decl = std::make_unique<AstFunctionDeclaration>();
+            function_decl->identifier_ = function_name;
+            function_decl->return_type_ = token_type_to_data_type(return_type.type_);
+            function_decl->parameters_ = std::move(params);
+            return function_decl;
         }
-
     }
 
 
