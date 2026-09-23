@@ -25,10 +25,11 @@ namespace fela
         void parse_program();
     private:
         //functions
+        //func helpers
         void parse_param_list();
+        void parse_argument_list();
         void parse_function();
 
-        void parse_argument_list();
         void parse_function_call();
         //instructions
         void parse_instruction();

@@ -1,4 +1,4 @@
-#include "LookUpTable.h++"
+#include "SymbolTable.h++"
 
 namespace fela
 {

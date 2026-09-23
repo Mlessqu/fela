@@ -1,4 +1,5 @@
 #pragma once
+#include "SymbolTable.h++"
 
 namespace fela
 {
@@ -9,23 +10,36 @@ namespace fela
     //layer 4 AstFunction
 
 
-    class AstNodeBase
+    class AstBase
     {
     public:
-        AstNodeBase();
+        AstBase();
     };
     //layer2
-    class AstNodeExpression : public AstNodeBase //value and type semantic check
+    class AstExpression : public AstBase //value and type semantic check
     {
-
+    public:
+        DataType variable_type_;
     };
+    //literal -> bool/int literal
+    //variable expr -> read variable by name
+    //unary expr -> op + expr
+    //binary expr -> lh_exp + op + rh_exp
+    //Call func expr -> look up symbol -> validate arg list correctness
+
     //layer 3, executes instruction, no value produced
-    class AstNodeInstruction : public AstNodeBase
+    class AstInstruction : public AstBase
     {
 
     };
+    //variable decl
+    //assign
+    //block of instruction {...}
+    //if instruction
+    //while instruction
+    //expression instruction (function call returning value for example)
     //layer 4,  functions
-    class AstNodeFunction : public AstNodeBase
+    class AstFunction : public AstBase
     {
 
     };

@@ -8,7 +8,7 @@ namespace fela
     //need data structure where we keep info of symbols read by parser
     //then semantic checker can construct nodes from this data if valid of course
 
-    enum class SymbolType //based on parse_program(), we might only need these 2
+    enum class SymbolType
     {
         variable,
         function

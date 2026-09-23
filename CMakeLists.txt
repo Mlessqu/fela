@@ -11,8 +11,10 @@ add_executable(fela
         src/Parser.h++
         src/AbstractSyntaxTree.cpp
         src/AbstractSyntaxTree.h++
-        src/LookUpTable.cpp
-        src/LookUpTable.h++
+        src/SymbolTable.cpp
+        src/SymbolTable.h++
+        src/SemanticChecker.cpp
+        src/SemanticChecker.h++
 )
 
 add_executable(fela_tests
