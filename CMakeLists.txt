@@ -9,6 +9,10 @@ add_executable(fela
         src/Lexer.h++
         src/Parser.cpp
         src/Parser.h++
+        src/AbstractSyntaxTree.cpp
+        src/AbstractSyntaxTree.h++
+        src/LookUpTable.cpp
+        src/LookUpTable.h++
 )
 
 add_executable(fela_tests
