@@ -1,6 +1,5 @@
 #pragma once
 #include <unordered_map>
-#include <unordered_set>
 
 #include "SymbolTable.h++"
 
@@ -11,7 +10,7 @@ class AstInstruction;
     class SemanticChecker
     {
     public:
-        AstExpression* literal_expression();
+        AstExpression* literal_expression(AstExpression* _literal_expr);
         AstExpression* variable_expression();
         AstExpression* unary_operation();
         AstExpression* binary_operation();
@@ -20,6 +19,6 @@ class AstInstruction;
         AstInstruction* while_instruction();
         AstInstruction* assign_instruction();
     private:
-        std::pmr::unordered_set<Symbol> symbol_table_;
+        std::unordered_map<std::string, Symbol> symbol_table_;
     };
 } // fela

@@ -1,4 +1,5 @@
 #pragma once
+#include "Lexer.h++"
 #include "SymbolTable.h++"
 
 namespace fela
@@ -20,6 +21,35 @@ namespace fela
     {
     public:
         DataType variable_type_;
+    };
+    class AstLiteralExpression : public AstExpression
+    {
+        DataType type_;
+        std::variant<bool, int> value_;
+    };
+    class AstVariableExpression : public AstExpression
+    {
+        DataType type_;
+        std::string identifier_;
+        std::variant<bool, int> value_;
+    };
+    class AstUnaryExpression : public AstExpression
+    {
+        TokenType operator_;
+        std::variant<bool, int> value_;
+    };
+    class AstBinaryExpression : public AstExpression
+    {
+        TokenType operator_;
+        std::variant<bool, int> lhs_;
+        std::variant<bool, int> rhs_;
+
+    };
+    class AstFunctionCall : public AstExpression
+    {
+        std::string identifier_;
+        DataType return_type_;
+        std::vector<DataType> arguments_;
     };
     //literal -> bool/int literal
     //variable expr -> read variable by name
