@@ -75,6 +75,7 @@ namespace fela
                 }
             }else
             {
+                consume_token();
                 //unexpected token at top level, error here
             }
         }
@@ -340,13 +341,10 @@ namespace fela
         if (is_type(TokenType::close_group))
         {
             consume_token();
-
         }
         if (!is_type_specifier_keyword())
         {
-
-            //error here!
-
+            //error here
         }
         consume_token();
         //the problem is I can expect only one token type! not arbitrary amount, DO i make special "type_specifier" rule or something?
