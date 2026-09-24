@@ -55,7 +55,6 @@ namespace fela
     }
 
 
-
     Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(_sema)
     {
     }
@@ -73,13 +72,14 @@ namespace fela
                 if (look_ahead(2) == TokenType::open_group)
                 {
                     node = parse_function();
-
-                }else
+                }
+                else
                 {
                     node = parse_variable_declaration_instruction();
                 }
                 program_tree->nodes_.push_back(std::move(node));
-            }else
+            }
+            else
             {
                 auto invalid_token = consume_token();
                 return nullptr;
@@ -124,11 +124,11 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_return_instruction()
     {
-        auto ret_keyword= consume_token();
+        auto ret_keyword = consume_token();
         auto return_value = std::make_unique<AstExpression>();
         if (is_not_type(TokenType::semi))
         {
-             return_value =parse_expression();
+            return_value = parse_expression();
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         auto return_node = std::make_unique<AstReturnInstruction>();
@@ -144,7 +144,7 @@ namespace fela
         auto while_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         auto while_body = parse_instruction();
-        auto node_instruction = sema_.while_instruction(std::move(while_condition),std::move(while_body));
+        auto node_instruction = sema_.while_instruction(std::move(while_condition), std::move(while_body));
         return node_instruction;
     }
 
@@ -162,9 +162,9 @@ namespace fela
             consume_token();
             optional_else = parse_instruction();
         }
-        auto return_node = sema_.if_instruction(std::move(if_condition),std::move(then_body),std::move(optional_else));
+        auto return_node = sema_.if_instruction(std::move(if_condition), std::move(then_body),
+                                                std::move(optional_else));
         return return_node;
-
     }
 
 
@@ -177,11 +177,12 @@ namespace fela
         if (token_type.payload_ == "bool")
         {
             declare_var_node->type_ = DataType::bool_type;
-        }else if (token_type.payload_ == "int")
+        }
+        else if (token_type.payload_ == "int")
         {
             declare_var_node->type_ = DataType::int_type;
-
-        }else
+        }
+        else
         {
             declare_var_node->type_ = DataType::void_type;
         }
@@ -223,7 +224,7 @@ namespace fela
 
         Token op = consume_token(); // equal sign
         auto value = parse_expression(); // expression
-        auto return_node = sema_.assign_instruction(op.type_,id_token.payload_,std::move(value));
+        auto return_node = sema_.assign_instruction(op.type_, id_token.payload_, std::move(value));
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         return return_node;
     }
@@ -256,10 +257,10 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_grouped_expression()
     {
-        consume_token();
-        parse_expression();
+        expect_and_consume(TokenType::open_group, expected_diff_symbol_error("("));
+        auto ret_node = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
-        return nullptr;
+        return ret_node;
     }
 
 
@@ -268,18 +269,27 @@ namespace fela
         if (is_type(TokenType::identifier))
         {
             TokenType ahead = look_ahead();
-            if (ahead == TokenType::open_group)
+            if (ahead == TokenType::open_group) // (
             {
-                parse_function_call();
-            }else
+                auto ret_node = parse_function_call();
+                return ret_node;
+            }
+            else
             {
-                consume_token();
+                Token id_token = consume_token(); // (
+                return sema_.variable_expression(id_token.payload_);
             }
         }
         if (is_type(TokenType::integer_literal) || is_type(TokenType::false_boolean) ||
             is_type(TokenType::true_boolean))
         {
-           auto token =consume_token();
+            auto token = consume_token();
+            if (token.type_ == TokenType::true_boolean)
+            {
+            }
+            if (token.type_ == TokenType::false_boolean)
+            {
+            }
         }
         if (is_type(TokenType::open_group))
         {
@@ -289,11 +299,34 @@ namespace fela
     }
 
 
+    std::unique_ptr<AstExpression> Parser::parse_literal_expression()
+    {
+        //literals we have right boolean and integer
+        Token literal = consume_token();
+        if (literal.type_ == TokenType::integer_literal)
+        {
+            int integer;
+
+            integer = std::stoi(std::string(literal.payload_));
+            return sema_.literal_expression(integer);
+        }
+        if (literal.type_ == TokenType::true_boolean)
+        {
+            return sema_.literal_expression(true);
+        }
+        if (literal.type_ == TokenType::false_boolean)
+        {
+            return sema_.literal_expression(false);
+        }
+        return nullptr;
+    }
+
+
     std::unique_ptr<AstExpression> Parser::parse_unary_expression()
     {
         while (is_type(TokenType::plus) || is_type(TokenType::minus) || is_type(TokenType::negation_op))
         {
-            consume_token();
+            consume_token(); //unary ops
         }
         parse_primary_expression();
         return nullptr;
@@ -376,10 +409,10 @@ namespace fela
     {
         switch (_type)
         {
-            case TokenType::type_int: return DataType::int_type;
-            case TokenType::type_bool: return DataType::bool_type;
-            case TokenType::type_void: return DataType::void_type;
-            default: return DataType::void_type;
+        case TokenType::type_int: return DataType::int_type;
+        case TokenType::type_bool: return DataType::bool_type;
+        case TokenType::type_void: return DataType::void_type;
+        default: return DataType::void_type;
         }
     }
 
@@ -424,8 +457,6 @@ namespace fela
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         return param_list;
     }
-
-
 
 
     std::unique_ptr<AstFunction> Parser::parse_function()

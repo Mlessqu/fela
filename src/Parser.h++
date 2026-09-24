@@ -49,6 +49,7 @@ namespace fela
         std::unique_ptr<AstInstruction> parse_primary_instruction();
         //expressions
         std::unique_ptr<AstExpression> parse_expression();
+        std::unique_ptr<AstExpression> parse_literal_expression();
         std::unique_ptr<AstExpression> parse_grouped_expression();
         std::unique_ptr<AstExpression> parse_primary_expression();
         std::unique_ptr<AstExpression> parse_unary_expression();
