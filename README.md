@@ -12,14 +12,13 @@ Research and write parser skeleton. - done
 write parser - done
 boring unit tests for parser - done  by AI
 Research how clang implements sema and AST.-done
+Research how to implement symbol table and ast nodes - done
 define some initial ast tree data structure - done
 
-
-
+writer parser v2 - done (first time I only wrote skeleton and defined descent order with basicaly empty stubs oops!)
+write semantic checker stubs - done
 
 
 
 Current goals: 
-Code semantic checker that can generate AST tree
-Research what I need exactly to have AST tree here.
-Research how to implement symbol table and ast nodes (what data structure do I need for each?)
+Code semantic checker, write tests
