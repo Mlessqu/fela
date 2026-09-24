@@ -326,7 +326,9 @@ namespace fela
     {
         while (is_type(TokenType::plus) || is_type(TokenType::minus) || is_type(TokenType::negation_op))
         {
-            consume_token(); //unary ops
+            Token token = consume_token();
+            auto operand = parse_unary_expression();
+            return sema_.unary_operation(token.type_,std::move(operand));
         }
         parse_primary_expression();
         return nullptr;
@@ -335,47 +337,53 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_multiplying_expression()
     {
-        parse_unary_expression();
+        auto lhs = parse_unary_expression();
         while (is_type(TokenType::multiply_op) || is_type(TokenType::divide_op))
         {
-            consume_token();
-            parse_unary_expression();
+
+            Token token = consume_token();
+            auto rhs = parse_unary_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+
         }
-        return nullptr;
+        return lhs;
     }
 
 
     std::unique_ptr<AstExpression> Parser::parse_additive_expression()
     {
-        parse_multiplying_expression();
+        auto lhs = parse_multiplying_expression();
         while (is_type(TokenType::minus) || is_type(TokenType::plus))
         {
-            consume_token();
-            parse_multiplying_expression();
+            Token token = consume_token();
+            auto rhs = parse_multiplying_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
-        return nullptr;
+        return lhs;
     }
 
 
     std::unique_ptr<AstExpression> Parser::parse_relational_expression()
     {
-        parse_additive_expression();
+        auto lhs = parse_additive_expression();
         while (is_type(TokenType::smaller_op) || is_type(TokenType::greater_op))
         {
-            consume_token();
-            parse_additive_expression();
+            Token token = consume_token();
+            auto rhs = parse_additive_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
-        return nullptr;
+        return lhs;
     }
 
 
     std::unique_ptr<AstExpression> Parser::parse_equality_expression()
     {
-        parse_relational_expression();
+        auto lhs = parse_relational_expression();
         while (is_type(TokenType::equal_op) || is_type(TokenType::not_equal_op))
         {
-            consume_token();
-            parse_relational_expression();
+            Token token = consume_token();
+            auto rhs = parse_relational_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
         return nullptr;
     }
@@ -383,11 +391,13 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_boolean_logic_and_expression()
     {
-        parse_equality_expression();
+
+        auto lhs = parse_equality_expression();
         while (is_type(TokenType::and_op))
         {
-            consume_token();
-            parse_equality_expression();
+            Token token = consume_token();
+            auto rhs = parse_equality_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
         return nullptr;
     }
@@ -395,13 +405,14 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_boolean_logic_or_expression()
     {
-        parse_boolean_logic_and_expression();
+        auto lhs = parse_boolean_logic_and_expression();
         while (is_type(TokenType::or_op))
         {
-            consume_token();
-            parse_boolean_logic_and_expression();
+            Token token = consume_token();
+            auto rhs = parse_boolean_logic_and_expression();
+            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
-        return nullptr;
+        return lhs;
     }
 
 
