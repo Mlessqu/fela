@@ -499,7 +499,7 @@ namespace fela
         expect_and_consume(TokenType::open_group,expected_diff_symbol_error("("));
         if (is_type(TokenType::close_group))//empty call
         {
-            consume_token();
+            expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
             return args;
         }
         if (is_not_type(TokenType::close_group))
@@ -508,7 +508,7 @@ namespace fela
         }
         while (is_not_type(TokenType::close_group))
         {
-            expect_and_consume(TokenType::coma, "err stub");
+            expect_and_consume(TokenType::coma, expected_diff_symbol_error(","));
             args.push_back(parse_expression());
         }
         expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
@@ -527,9 +527,9 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_function_call()
     {
-        expect_and_consume(TokenType::identifier, "err stub");
-        parse_argument_list();
-        return nullptr;
+        Token id_token = consume_token();
+        auto args = parse_argument_list();
+        return sema_.function_call(id_token.payload_,std::move(args));
     }
 
 
