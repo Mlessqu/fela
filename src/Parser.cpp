@@ -55,10 +55,6 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker* _sema) : tokens_(std::move(_tokens)), sema_(*_sema)
-    {
-    }
-
 
     Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(_sema)
     {
@@ -67,24 +63,29 @@ namespace fela
 
     std::unique_ptr<AstProgram> Parser::parse_program()
     {
+        std::unique_ptr<AstProgram> program_tree = std::make_unique<AstProgram>();
+
         while (is_not_type(TokenType::eof))
         {
             if (is_type_specifier_keyword())
             {
+                std::unique_ptr<AstBase> node;
                 if (look_ahead(2) == TokenType::open_group)
                 {
-                    parse_function();
+                    node = parse_function();
+
                 }else
                 {
-                    parse_variable_declaration_instruction();
+                    node = parse_variable_declaration_instruction();
                 }
+                program_tree->nodes_.push_back(std::move(node));
             }else
             {
                 auto invalid_token = consume_token();
                 return nullptr;
             }
         }
-        return nullptr;
+        return program_tree;
     }
 
 
@@ -171,11 +172,12 @@ namespace fela
     {
         auto declare_var_node = std::make_unique<AstVariableDeclaration>();
 
-        auto data_type = consume_token(); //type keyword
-        if (data_type.payload_ == "bool")
+        auto token_type = consume_token(); //type keyword
+
+        if (token_type.payload_ == "bool")
         {
             declare_var_node->type_ = DataType::bool_type;
-        }else if (data_type.payload_ == "int")
+        }else if (token_type.payload_ == "int")
         {
             declare_var_node->type_ = DataType::int_type;
 
@@ -201,21 +203,27 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_block_instruction()
     {
+        auto ret_node = std::make_unique<AstBlockInstruction>();
+
         consume_token();
         while (is_not_type(TokenType::close_scope) && is_not_type(TokenType::eof))
         {
-            parse_instruction();
+            ret_node->body_.push_back(std::move(parse_instruction()));
         }
         expect_and_consume(TokenType::close_scope, expected_diff_symbol_error("}"));
-        return nullptr;
+        return ret_node;
     }
 
 
     std::unique_ptr<AstInstruction> Parser::parse_assign_instruction()
     {
-        consume_token();
-        consume_token();
-        parse_expression();
+        std::unique_ptr<AstAssignInstruction> assign_instruction;
+
+        Token id_token = consume_token(); //identifier
+
+        Token op = consume_token(); // equal sign
+        auto value = parse_expression(); // expression
+        sema_.assign_instruction(op.type_,id_token.payload_,std::move(value));
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         return nullptr;
     }

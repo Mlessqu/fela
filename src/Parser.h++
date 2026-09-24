@@ -27,7 +27,7 @@ namespace fela
         std::string expected_diff_symbol_error(std::string_view _expected);
         SemanticChecker& sema_;
     public:
-        explicit Parser(std::vector<Token> _tokens, SemanticChecker* _sema = nullptr);
+
         explicit Parser(std::vector<Token> _tokens, SemanticChecker& _sema);
         std::unique_ptr<AstProgram> parse_program();
     private:

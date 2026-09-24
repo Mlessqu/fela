@@ -24,9 +24,9 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::variable_expression(std::string _name_identifier)
+    std::unique_ptr<AstExpression> SemanticChecker::variable_expression(std::string_view _name_identifier)
     {
-        auto map_lookup = symbol_table_.find(_name_identifier);
+        auto map_lookup = symbol_table_.find(std::string(_name_identifier));
         if (symbol_table_.end() == map_lookup)
         {
             //no such expression!
@@ -155,16 +155,17 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::function_call(std::string _identifier,
+    std::unique_ptr<AstExpression> SemanticChecker::function_call(std::string_view _identifier,
                                                                   std::vector<std::unique_ptr<AstExpression>>
                                                                   _arguments)
     {
-        if (this->symbol_table_.find(_identifier)== symbol_table_.end())
+        std::string identifier{_identifier};
+        if (this->symbol_table_.find(identifier)== symbol_table_.end())
         {
             //nie ma takiej funckji nawet!
             return nullptr;
         }
-        auto function_call = symbol_table_.find(_identifier);
+        auto function_call = symbol_table_.find(identifier);
         if (!std::holds_alternative<FunctionSymbol>(function_call->second.symbol_signature_))
         {
             return nullptr;
@@ -202,13 +203,13 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(TokenType _operator, std::string _identifier,
+    std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(TokenType _operator, std::string_view _identifier,
                                                                         std::unique_ptr<AstExpression> _rhs)
     {
     }
 
 
-    std::unique_ptr<AstInstruction> SemanticChecker::variable_declaration(DataType _type, std::string _identifier,
+    std::unique_ptr<AstInstruction> SemanticChecker::variable_declaration(DataType _type, std::string_view _identifier,
                                                                           std::unique_ptr<AstExpression> _init_value)
     {
     }
@@ -222,13 +223,13 @@ namespace fela
 
 
 
-    std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type, std::string _identifier,
+    std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type, std::string_view _identifier,
                                                                        std::vector<VariableSymbol> _params)
     {
     }
 
 
-    std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type, std::string _identifier,
+    std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type, std::string_view _identifier,
                                                                       std::vector<VariableSymbol> _params,
                                                                       std::unique_ptr<AstInstruction> _body)
     {
