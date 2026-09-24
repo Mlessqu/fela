@@ -223,9 +223,9 @@ namespace fela
 
         Token op = consume_token(); // equal sign
         auto value = parse_expression(); // expression
-        sema_.assign_instruction(op.type_,id_token.payload_,std::move(value));
+        auto return_node = sema_.assign_instruction(op.type_,id_token.payload_,std::move(value));
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
-        return nullptr;
+        return return_node;
     }
 
 
