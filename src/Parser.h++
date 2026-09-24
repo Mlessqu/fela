@@ -20,6 +20,7 @@ namespace fela
         bool is_type(TokenType _type);
         bool is_not_type(TokenType _type);
         bool is_type_specifier_keyword();
+        DataType token_type_to_data_type(TokenType _type);
         TokenType look_ahead(size_t _offset = 1);
         //advances cursor
         const Token consume_token();

@@ -283,17 +283,11 @@ namespace fela
         if (is_type(TokenType::integer_literal) || is_type(TokenType::false_boolean) ||
             is_type(TokenType::true_boolean))
         {
-            auto token = consume_token();
-            if (token.type_ == TokenType::true_boolean)
-            {
-            }
-            if (token.type_ == TokenType::false_boolean)
-            {
-            }
+            return parse_literal_expression();
         }
         if (is_type(TokenType::open_group))
         {
-            parse_grouped_expression();
+            return parse_grouped_expression();
         }
         return nullptr;
     }
@@ -330,8 +324,8 @@ namespace fela
             auto operand = parse_unary_expression();
             return sema_.unary_operation(token.type_,std::move(operand));
         }
-        parse_primary_expression();
-        return nullptr;
+        return parse_primary_expression();
+
     }
 
 
@@ -385,7 +379,7 @@ namespace fela
             auto rhs = parse_relational_expression();
             lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
-        return nullptr;
+        return lhs;
     }
 
 
@@ -399,7 +393,7 @@ namespace fela
             auto rhs = parse_equality_expression();
             lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
         }
-        return nullptr;
+        return lhs;
     }
 
 
@@ -416,7 +410,7 @@ namespace fela
     }
 
 
-    static DataType token_type_to_data_type(TokenType _type)
+    DataType Parser::token_type_to_data_type(TokenType _type)
     {
         switch (_type)
         {
@@ -501,18 +495,24 @@ namespace fela
 
     std::vector<std::unique_ptr<AstExpression>> Parser::parse_argument_list()
     {
-        consume_token();
+        std::vector<std::unique_ptr<AstExpression>> args;
+        expect_and_consume(TokenType::open_group,expected_diff_symbol_error("("));
+        if (is_type(TokenType::close_group))//empty call
+        {
+            consume_token();
+            return args;
+        }
         if (is_not_type(TokenType::close_group))
         {
-            parse_expression();
+            args.push_back(parse_expression());
         }
         while (is_not_type(TokenType::close_group))
         {
             expect_and_consume(TokenType::coma, "err stub");
-            parse_expression();
+            args.push_back(parse_expression());
         }
-        consume_token();
-        return {};
+        expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
+        return args;
     }
 
 
