@@ -31,6 +31,42 @@ namespace fela
     }
 
 
+    bool ScopeStack::insert_var_symbol(std::string_view _name, DataType _type)
+    {
+        if (!lookup(std::string{_name}))
+        {
+            //symbol already exists!
+            return false;
+        }
+        if (_type == DataType::void_type)
+        {
+            //var cannot be of type void!
+            return false;
+        }
+        VariableSymbol var_symbol{std::string{_name},_type};
+        if (!insert_symbol(var_symbol.name_,{var_symbol}))
+        {
+            return false;
+        }
+        return true;
+    }
+
+
+    bool ScopeStack::insert_func_symbol(std::string_view _name, DataType _type, const std::vector<DataType>& _params)
+    {
+        if (!lookup(std::string{_name}))
+        {
+            return false;
+        }
+        FunctionSymbol function_symbol(std::string{_name}, _type, _params);
+        if (!insert_symbol(function_symbol.name_,{function_symbol}))
+        {
+            return false;
+        }
+        return true;
+    }
+
+
     const Symbol* ScopeStack::lookup(const std::string& _name) const
     {
         //go over vector from r begin to r end,

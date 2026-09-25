@@ -257,6 +257,23 @@ namespace fela
     std::unique_ptr<AstInstruction> SemanticChecker::variable_declaration(DataType _type, std::string_view _identifier,
                                                                           std::unique_ptr<AstExpression> _init_value)
     {
+        if (_type == DataType::void_type)
+        {
+            //var can't be null
+            return nullptr;
+        }
+        const Symbol* symbol = symbol_table_.lookup(std::string(_identifier));
+        if (!symbol)
+        {
+            //name already exists in this scope
+            return nullptr;
+        }
+        VariableSymbol var_symbol{std::string(_identifier),_type};
+        Symbol ins_symbol{var_symbol};
+        symbol_table_.insert_symbol(std::string{_identifier},ins_symbol);
+        std::unique_ptr<AstVariableDeclaration> ret_node = std::make_unique<AstVariableDeclaration>();
+        ret_node->identifier_=_identifier;
+
     }
 
 
