@@ -24,7 +24,7 @@ namespace fela
     {
         std::string name_;
         DataType return_type_;
-        std::vector<DataType> param_types_;
+        std::vector<VariableSymbol> param_types_;
     };
     struct Symbol
     {
@@ -40,7 +40,7 @@ namespace fela
         void pop_scope();
         [[nodiscard]] bool insert_symbol(const std::string& _name, const Symbol& _symbol);
         bool insert_var_symbol(std::string_view _name, DataType _type);
-        bool insert_func_symbol(std::string_view _name, DataType _type, const std::vector<DataType>& _params);
+        bool insert_func_symbol(std::string_view _name, DataType _type, const std::vector<VariableSymbol>& _params);
         const Symbol* lookup(const std::string& _name) const;
     private:
         std::vector<Scope> scopes_;

@@ -156,7 +156,6 @@ namespace fela
                                                                   _arguments)
     {
         std::string identifier{_identifier};
-        auto function_call = std::unique_ptr<AstFunctionCall>();
 
         const Symbol* symbol = symbol_table_.lookup(identifier);
 
@@ -177,13 +176,13 @@ namespace fela
         }
         for (int i = 0; i < _arguments.size(); ++i)
         {
-            if (_arguments[i]->resolved_type_ != param_types[i].type_) //types list missmatch
+            if (!_arguments[i] || _arguments[i]->resolved_type_ != param_types[i].type_) //types list missmatch
             {
                 return nullptr;
             }
             //error wrong argument type/mismatch!
         }
-        std::unique_ptr<AstFunctionCall> ret_node;
+        auto ret_node = std::make_unique<AstFunctionCall>();
         ret_node->resolved_type_ = function_signature.return_type_;
         ret_node->identifier_ = _identifier;
         ret_node->arguments_ = std::move(_arguments);
@@ -197,17 +196,14 @@ namespace fela
                                                                     std::unique_ptr<AstInstruction> _else_branch)
     {
         //if(condition){instruction}else {}
-        std::unique_ptr<AstIfInstruction> ret_node;
-        if (_condition->resolved_type_ != DataType::bool_type)
+        if (!_condition || _condition->resolved_type_ != DataType::bool_type)
         {
             return nullptr;
         }
+        auto ret_node = std::make_unique<AstIfInstruction>();
         ret_node->condition_ = std::move(_condition);
         ret_node->then_ = std::move(_if_branch);
-        if (!_else_branch)
-        {
-            ret_node->else_branch_ = std::move(_else_branch);
-        }
+        ret_node->else_branch_ = std::move(_else_branch);
         return ret_node;
     }
 
@@ -215,11 +211,11 @@ namespace fela
     std::unique_ptr<AstInstruction> SemanticChecker::while_instruction(std::unique_ptr<AstExpression> _condition,
                                                                        std::unique_ptr<AstInstruction> _body)
     {
-        std::unique_ptr<AstWhileInstruction> ret_node;
-        if (_condition->resolved_type_ != DataType::bool_type)
+        if (!_condition || _condition->resolved_type_ != DataType::bool_type)
         {
             return nullptr;
         }
+        auto ret_node = std::make_unique<AstWhileInstruction>();
         ret_node->condition_ = std::move(_condition);
         ret_node->body_ = std::move(_body);
         return ret_node;
@@ -286,8 +282,9 @@ namespace fela
     std::unique_ptr<AstInstruction> SemanticChecker::block_instruction(
         std::vector<std::unique_ptr<AstInstruction>> _instructions)
     {
-        std::unique_ptr<AstBlockInstruction> instructions = std::make_unique_for_overwrite<AstBlockInstruction>();
+        auto instructions = std::make_unique<AstBlockInstruction>();
         instructions->body_ = std::move(_instructions);
+        return instructions;
     }
 
 
@@ -295,7 +292,6 @@ namespace fela
                                                                        std::string_view _identifier,
                                                                        std::vector<VariableSymbol> _params)
     {
-        std::unique_ptr<AstFunctionDeclaration> ret_node;
         if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
         {
             return nullptr;
@@ -306,6 +302,7 @@ namespace fela
             symbol_table_.insert_var_symbol(param.name_, param.type_);
         }
         symbol_table_.pop_scope();
+        auto ret_node = std::make_unique<AstFunctionDeclaration>();
         ret_node->identifier_ = std::string{_identifier};
         ret_node->return_type_ = _return_type;
         ret_node->parameters_ = std::move(_params);
@@ -318,7 +315,6 @@ namespace fela
                                                                       std::vector<VariableSymbol> _params,
                                                                       std::unique_ptr<AstBlockInstruction> _body)
     {
-        std::unique_ptr<AstFunctionDefinition> ret_node;
         if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
         {
             return nullptr;
@@ -329,9 +325,11 @@ namespace fela
             symbol_table_.insert_var_symbol(param.name_, param.type_);
         }
         symbol_table_.pop_scope();
+        auto ret_node = std::make_unique<AstFunctionDefinition>();
         ret_node->identifier_ = std::string{_identifier};
         ret_node->return_type_ = _return_type;
         ret_node->parameters_ = std::move(_params);
         ret_node->body_ = std::move(_body);
+        return ret_node;
     }
 }
