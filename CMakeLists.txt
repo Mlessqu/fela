@@ -23,6 +23,12 @@ add_executable(fela_tests
         src/Lexer.h++
         src/Parser.cpp
         src/Parser.h++
+        src/AbstractSyntaxTree.cpp
+        src/AbstractSyntaxTree.h++
+        src/SymbolTable.cpp
+        src/SymbolTable.h++
+        src/SemanticChecker.cpp
+        src/SemanticChecker.h++
         tests/test_parser.cpp)
 target_include_directories(fela_tests PRIVATE src)
 

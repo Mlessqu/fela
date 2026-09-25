@@ -35,6 +35,6 @@ namespace fela
         //function def
         //function declaration
     private:
-        std::unordered_map<std::string, Symbol> symbol_table_;
+        ScopeStack symbol_table_;
     };
 } // fela

@@ -26,21 +26,19 @@ namespace fela
 
     std::unique_ptr<AstExpression> SemanticChecker::variable_expression(std::string_view _name_identifier)
     {
-        auto map_lookup = symbol_table_.find(std::string(_name_identifier));
-        if (symbol_table_.end() == map_lookup)
+        const Symbol* map_lookup = symbol_table_.lookup(std::string(_name_identifier));
+        if (!map_lookup)
         {
-            //no such expression!
             return nullptr;
         }
-        const Symbol& symbol = map_lookup->second;
-        if (!std::holds_alternative<VariableSymbol>(symbol.symbol_signature_))
+        if (!std::holds_alternative<VariableSymbol>(map_lookup->symbol_signature_))
         {
             //error, expected it to be variable!
             return nullptr;
         }
         auto variable = std::make_unique<AstVariableExpression>();
         variable->identifier_ = _name_identifier;
-        variable->resolved_type_ = std::get<VariableSymbol>(symbol.symbol_signature_).type_;
+        variable->resolved_type_ = std::get<VariableSymbol>(map_lookup->symbol_signature_).type_;
         return variable;
     }
 
@@ -99,21 +97,21 @@ namespace fela
         case TokenType::equal_op:
         case TokenType::not_equal_op:
             {
-              if (_lhs->resolved_type_ == DataType::bool_type &&  _rhs->resolved_type_ == DataType::bool_type)
-              {
-                  binary_operation->resolved_type_=DataType::bool_type;;
-                  binary_operation->lhs_ = std::move(_lhs);
-                  binary_operation->rhs_ = std::move(_rhs);
-                  return binary_operation;
-              }
-                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_== DataType::int_type)
-              {
-                  binary_operation->resolved_type_=DataType::bool_type;
-                  binary_operation->lhs_ = std::move(_lhs);
-                  binary_operation->rhs_ = std::move(_rhs);
-                  return binary_operation;
-              }
-             return nullptr;
+                if (_lhs->resolved_type_ == DataType::bool_type && _rhs->resolved_type_ == DataType::bool_type)
+                {
+                    binary_operation->resolved_type_ = DataType::bool_type;;
+                    binary_operation->lhs_ = std::move(_lhs);
+                    binary_operation->rhs_ = std::move(_rhs);
+                    return binary_operation;
+                }
+                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_ == DataType::int_type)
+                {
+                    binary_operation->resolved_type_ = DataType::bool_type;
+                    binary_operation->lhs_ = std::move(_lhs);
+                    binary_operation->rhs_ = std::move(_rhs);
+                    return binary_operation;
+                }
+                return nullptr;
             }
             break;
         case TokenType::and_op:
@@ -150,8 +148,6 @@ namespace fela
             }
             break;
         }
-
-
     }
 
 
@@ -160,32 +156,38 @@ namespace fela
                                                                   _arguments)
     {
         std::string identifier{_identifier};
-        if (this->symbol_table_.find(identifier)== symbol_table_.end())
-        {
-            //nie ma takiej funckji nawet!
-            return nullptr;
-        }
-        auto function_call = symbol_table_.find(identifier);
-        if (!std::holds_alternative<FunctionSymbol>(function_call->second.symbol_signature_))
+        auto function_call = std::unique_ptr<AstFunctionCall>();
+
+        const Symbol* symbol = symbol_table_.lookup(identifier);
+
+        if (!symbol)
         {
             return nullptr;
         }
-        auto params = std::get<FunctionSymbol>(function_call->second.symbol_signature_).param_types_;
-        if (params.size()!= _arguments.size())
+
+        if (!std::holds_alternative<FunctionSymbol>(symbol->symbol_signature_))
         {
             return nullptr;
         }
-        for (int i=0;i< _arguments.size();++i)
+        auto& function_signature = std::get<FunctionSymbol>(symbol->symbol_signature_);
+        auto& param_types = function_signature.param_types_;
+        if (param_types.size() != _arguments.size())
         {
-            if (_arguments[i]->resolved_type_ == params[i])
-            {
-                continue;
-            }else
+            return nullptr;
+        }
+        for (int i = 0; i < _arguments.size(); ++i)
+        {
+            if (_arguments[i]->resolved_type_ != param_types[i]) //types list missmatch
             {
                 return nullptr;
             }
             //error wrong argument type/mismatch!
         }
+        std::unique_ptr<AstFunctionCall> ret_node;
+        ret_node->resolved_type_ = function_signature.return_type_;
+        ret_node->identifier_ = _identifier;
+        ret_node->arguments_ = std::move(_arguments);
+        return ret_node;
         //here we call function
     }
 
@@ -194,18 +196,56 @@ namespace fela
                                                                     std::unique_ptr<AstInstruction> _if_branch,
                                                                     std::unique_ptr<AstInstruction> _else_branch)
     {
+        //if(condition){instruction}else {}
+        std::unique_ptr<AstIfInstruction> ret_node;
+        if (_condition->resolved_type_ != DataType::bool_type)
+        {
+            return nullptr;
+        }
+        ret_node->condition_ = std::move(_condition);
+        ret_node->then_ = std::move(_if_branch);
+        if (!_else_branch)
+        {
+            ret_node->else_branch_ = std::move(_else_branch);
+        }
+        return ret_node;
     }
 
 
     std::unique_ptr<AstInstruction> SemanticChecker::while_instruction(std::unique_ptr<AstExpression> _condition,
                                                                        std::unique_ptr<AstInstruction> _body)
     {
+        std::unique_ptr<AstWhileInstruction> ret_node;
+        if (_condition->resolved_type_ != DataType::bool_type)
+        {
+            return nullptr;
+        }
+        ret_node->condition_ = std::move(_condition);
+        ret_node->body_ = std::move(_body);
+        return ret_node;
     }
 
 
-    std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(TokenType _operator, std::string_view _identifier,
-                                                                        std::unique_ptr<AstExpression> _rhs)
+    std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(
+        TokenType _operator, std::string_view _identifier,
+        std::unique_ptr<AstExpression> _rhs)
     {
+        //identifier = _rhs_expression
+        std::string identifier{_identifier};
+        const Symbol* symbol = symbol_table_.lookup(identifier);
+        if (!symbol)
+        {
+            return nullptr;
+        }
+        auto lhs_signature = std::get<VariableSymbol>(symbol->symbol_signature_);
+        if (lhs_signature.type_ != _rhs->resolved_type_)
+        {
+            return nullptr;
+        }
+        std::unique_ptr<AstAssignInstruction> ret_node;
+        ret_node->identifier_ = identifier;
+        ret_node->rhs_ = std::move(_rhs);
+        return ret_node;
     }
 
 
@@ -221,15 +261,15 @@ namespace fela
     }
 
 
-
-
-    std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type, std::string_view _identifier,
+    std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type,
+                                                                       std::string_view _identifier,
                                                                        std::vector<VariableSymbol> _params)
     {
     }
 
 
-    std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type, std::string_view _identifier,
+    std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type,
+                                                                      std::string_view _identifier,
                                                                       std::vector<VariableSymbol> _params,
                                                                       std::unique_ptr<AstInstruction> _body)
     {

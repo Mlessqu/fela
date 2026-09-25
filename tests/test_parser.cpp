@@ -4,6 +4,8 @@
 
 #include "Lexer.h++"
 #include "Parser.h++"
+#include "SemanticChecker.h++"
+
 
 static std::vector<fela::Token> tokenize(std::string _source)
 {
@@ -25,21 +27,24 @@ static std::vector<fela::Token> tokenize(std::string _source)
 TEST_CASE("parser parses global variable declarations")
 {
     std::vector<fela::Token> tokens = tokenize("int a = 5; bool flag = true; int b;");
-    fela::Parser parser(tokens);
+    fela::SemanticChecker checker;
+    fela::Parser parser(tokens,checker);
     CHECK_NOTHROW(parser.parse_program());
 }
 
 TEST_CASE("parser parses function declarations")
 {
     std::vector<fela::Token> tokens = tokenize("void foo(); int add(int a, int b);");
-    fela::Parser parser(tokens);
+    fela::SemanticChecker checker;
+    fela::Parser parser(tokens,checker);
     CHECK_NOTHROW(parser.parse_program());
 }
 
 TEST_CASE("parser parses function definition with return")
 {
     std::vector<fela::Token> tokens = tokenize("void main() { return; }");
-    fela::Parser parser(tokens);
+    fela::SemanticChecker checker;
+    fela::Parser parser(tokens,checker);
     CHECK_NOTHROW(parser.parse_program());
 }
 
@@ -58,7 +63,8 @@ TEST_CASE("parser parses if else and while statements")
         "}";
 
     std::vector<fela::Token> tokens = tokenize(source);
-    fela::Parser parser(tokens);
+    fela::SemanticChecker checker;
+    fela::Parser parser(tokens,checker);
     CHECK_NOTHROW(parser.parse_program());
 }
 
@@ -73,6 +79,7 @@ TEST_CASE("parser parses function call with arguments")
         "}";
 
     std::vector<fela::Token> tokens = tokenize(source);
-    fela::Parser parser(tokens);
+    fela::SemanticChecker checker;
+    fela::Parser parser(tokens,checker);
     CHECK_NOTHROW(parser.parse_program());
 }
