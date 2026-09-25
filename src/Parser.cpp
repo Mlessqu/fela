@@ -218,8 +218,6 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_assign_instruction()
     {
-        std::unique_ptr<AstAssignInstruction> assign_instruction;
-
         Token id_token = consume_token(); //identifier
 
         Token op = consume_token(); // equal sign
@@ -322,10 +320,9 @@ namespace fela
         {
             Token token = consume_token();
             auto operand = parse_unary_expression();
-            return sema_.unary_operation(token.type_,std::move(operand));
+            return sema_.unary_operation(token.type_, std::move(operand));
         }
         return parse_primary_expression();
-
     }
 
 
@@ -334,11 +331,9 @@ namespace fela
         auto lhs = parse_unary_expression();
         while (is_type(TokenType::multiply_op) || is_type(TokenType::divide_op))
         {
-
             Token token = consume_token();
             auto rhs = parse_unary_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
-
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -351,7 +346,7 @@ namespace fela
         {
             Token token = consume_token();
             auto rhs = parse_multiplying_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -364,7 +359,7 @@ namespace fela
         {
             Token token = consume_token();
             auto rhs = parse_additive_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -377,7 +372,7 @@ namespace fela
         {
             Token token = consume_token();
             auto rhs = parse_relational_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -385,13 +380,12 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_boolean_logic_and_expression()
     {
-
         auto lhs = parse_equality_expression();
         while (is_type(TokenType::and_op))
         {
             Token token = consume_token();
             auto rhs = parse_equality_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -404,7 +398,7 @@ namespace fela
         {
             Token token = consume_token();
             auto rhs = parse_boolean_logic_and_expression();
-            lhs = sema_.binary_operation(token.type_,std::move(lhs),std::move(rhs));
+            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
         }
         return lhs;
     }
@@ -496,10 +490,10 @@ namespace fela
     std::vector<std::unique_ptr<AstExpression>> Parser::parse_argument_list()
     {
         std::vector<std::unique_ptr<AstExpression>> args;
-        expect_and_consume(TokenType::open_group,expected_diff_symbol_error("("));
-        if (is_type(TokenType::close_group))//empty call
+        expect_and_consume(TokenType::open_group, expected_diff_symbol_error("("));
+        if (is_type(TokenType::close_group)) //empty call
         {
-            expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
+            expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
             return args;
         }
         if (is_not_type(TokenType::close_group))
@@ -511,7 +505,7 @@ namespace fela
             expect_and_consume(TokenType::coma, expected_diff_symbol_error(","));
             args.push_back(parse_expression());
         }
-        expect_and_consume(TokenType::close_group,expected_diff_symbol_error(")"));
+        expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         return args;
     }
 
@@ -529,7 +523,7 @@ namespace fela
     {
         Token id_token = consume_token();
         auto args = parse_argument_list();
-        return sema_.function_call(id_token.payload_,std::move(args));
+        return sema_.function_call(id_token.payload_, std::move(args));
     }
 
 

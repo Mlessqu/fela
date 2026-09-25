@@ -230,20 +230,25 @@ namespace fela
         TokenType _operator, std::string_view _identifier,
         std::unique_ptr<AstExpression> _rhs)
     {
-        //identifier = _rhs_expression
-        std::string identifier{_identifier};
-        const Symbol* symbol = symbol_table_.lookup(identifier);
-        if (!symbol)
+        if (_operator != TokenType::assign || !_rhs)
         {
             return nullptr;
         }
-        auto lhs_signature = std::get<VariableSymbol>(symbol->symbol_signature_);
+
+        const Symbol* symbol = symbol_table_.lookup(std::string(_identifier));
+        if (!symbol || !std::holds_alternative<VariableSymbol>(symbol->symbol_signature_))
+        {
+            return nullptr;
+        }
+
+        const auto& lhs_signature = std::get<VariableSymbol>(symbol->symbol_signature_);
         if (lhs_signature.type_ != _rhs->resolved_type_)
         {
             return nullptr;
         }
-        std::unique_ptr<AstAssignInstruction> ret_node;
-        ret_node->identifier_ = identifier;
+
+        auto ret_node = std::make_unique<AstAssignInstruction>();
+        ret_node->identifier_ = _identifier;
         ret_node->rhs_ = std::move(_rhs);
         return ret_node;
     }
