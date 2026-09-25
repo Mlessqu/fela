@@ -35,11 +35,13 @@ namespace fela
     {
         if (!lookup(std::string{_name}))
         {
+            //TODO: error msg
             //symbol already exists!
             return false;
         }
         if (_type == DataType::void_type)
         {
+            //TODO: error msg
             //var cannot be of type void!
             return false;
         }
@@ -52,7 +54,7 @@ namespace fela
     }
 
 
-    bool ScopeStack::insert_func_symbol(std::string_view _name, DataType _type, const std::vector<DataType>& _params)
+    bool ScopeStack::insert_func_symbol(std::string_view _name, DataType _type, const std::vector<VariableSymbol>& _params)
     {
         if (!lookup(std::string{_name}))
         {

@@ -6,6 +6,7 @@
 
 namespace fela
 {
+    struct AstBlockInstruction;
     struct AstFunction;
     enum class TokenType;
     class AstExpression;
@@ -28,8 +29,8 @@ namespace fela
         std::unique_ptr<AstInstruction> variable_declaration(DataType _type, std::string_view _identifier, std::unique_ptr<AstExpression> _init_value);
         std::unique_ptr<AstInstruction> block_instruction(std::vector<std::unique_ptr<AstInstruction>> _instructions);
 
-        std::unique_ptr<AstFunction> function_declaration(DataType _return_type,std::string_view _identifier, std::vector<VariableSymbol> _params);
-        std::unique_ptr<AstFunction> function_definition(DataType _return_type, std::string_view _identifier,  std::vector<VariableSymbol> _params, std::unique_ptr<AstInstruction> _body);
+        std::unique_ptr<AstFunction> function_declaration(DataType _return_type, std::string_view _identifier, std::vector<VariableSymbol> _params);
+        std::unique_ptr<AstFunction> function_definition(DataType _return_type, std::string_view _identifier, std::vector<VariableSymbol> _params, std::unique_ptr<AstBlockInstruction> _body);
 
         //function call
         //function def

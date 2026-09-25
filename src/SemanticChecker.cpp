@@ -177,7 +177,7 @@ namespace fela
         }
         for (int i = 0; i < _arguments.size(); ++i)
         {
-            if (_arguments[i]->resolved_type_ != param_types[i]) //types list missmatch
+            if (_arguments[i]->resolved_type_ != param_types[i].type_) //types list missmatch
             {
                 return nullptr;
             }
@@ -259,27 +259,35 @@ namespace fela
     {
         if (_type == DataType::void_type)
         {
+            //TODO: error msg
             //var can't be null
             return nullptr;
         }
         const Symbol* symbol = symbol_table_.lookup(std::string(_identifier));
         if (!symbol)
         {
+            //TODO: error msg
             //name already exists in this scope
             return nullptr;
         }
-        VariableSymbol var_symbol{std::string(_identifier),_type};
-        Symbol ins_symbol{var_symbol};
-        symbol_table_.insert_symbol(std::string{_identifier},ins_symbol);
+        if (!symbol_table_.insert_var_symbol(_identifier, _type))
+        {
+            //TODO: error msg
+            return nullptr;
+        }
         std::unique_ptr<AstVariableDeclaration> ret_node = std::make_unique<AstVariableDeclaration>();
-        ret_node->identifier_=_identifier;
-
+        ret_node->identifier_ = _identifier;
+        ret_node->type_ = _type;
+        ret_node->init_value_ = std::move(_init_value);
+        return ret_node;
     }
 
 
     std::unique_ptr<AstInstruction> SemanticChecker::block_instruction(
         std::vector<std::unique_ptr<AstInstruction>> _instructions)
     {
+        std::unique_ptr<AstBlockInstruction> instructions = std::make_unique_for_overwrite<AstBlockInstruction>();
+        instructions->body_ = std::move(_instructions);
     }
 
 
@@ -287,13 +295,43 @@ namespace fela
                                                                        std::string_view _identifier,
                                                                        std::vector<VariableSymbol> _params)
     {
+        std::unique_ptr<AstFunctionDeclaration> ret_node;
+        if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
+        {
+            return nullptr;
+        }
+        symbol_table_.push_scope();
+        for (const auto& param : _params)
+        {
+            symbol_table_.insert_var_symbol(param.name_, param.type_);
+        }
+        symbol_table_.pop_scope();
+        ret_node->identifier_ = std::string{_identifier};
+        ret_node->return_type_ = _return_type;
+        ret_node->parameters_ = std::move(_params);
+        return ret_node;
     }
 
 
     std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type,
                                                                       std::string_view _identifier,
                                                                       std::vector<VariableSymbol> _params,
-                                                                      std::unique_ptr<AstInstruction> _body)
+                                                                      std::unique_ptr<AstBlockInstruction> _body)
     {
+        std::unique_ptr<AstFunctionDefinition> ret_node;
+        if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
+        {
+            return nullptr;
+        }
+        symbol_table_.push_scope();
+        for (const auto& param : _params)
+        {
+            symbol_table_.insert_var_symbol(param.name_, param.type_);
+        }
+        symbol_table_.pop_scope();
+        ret_node->identifier_ = std::string{_identifier};
+        ret_node->return_type_ = _return_type;
+        ret_node->parameters_ = std::move(_params);
+        ret_node->body_ = std::move(_body);
     }
 }
