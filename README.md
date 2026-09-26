@@ -18,8 +18,9 @@ define some initial ast tree data structure - done
 writer parser v2 - done (first time I only wrote skeleton and defined descent order with basicaly empty stubs oops!)
 write semantic checker stubs - done
 I have just realised at some point I got confused and started doing semantic checks in the parser, where I meant it to be 2 pass compiler OOPS!
-
+Modify parser to produce just the AST tree -done!
 
 Current goals: 
-Modify parser to produce just the AST tree.
-Modify semantic checker to walk that tree.
+
+Modify semantic checker to walk AST tree.
+Review or rewrite parser tests written by AI
