@@ -469,7 +469,7 @@ namespace fela
         case TokenType::type_int: return DataType::int_type;
         case TokenType::type_bool: return DataType::bool_type;
         case TokenType::type_void: return DataType::void_type;
-        default: return DataType::void_type;
+        default: return DataType::unresolved_type;
         }
     }
 
@@ -580,8 +580,12 @@ namespace fela
     std::unique_ptr<AstExpression> Parser::parse_function_call()
     {
         Token id_token = consume_token();
+        std::string identifier{id_token.payload_};
         auto args = parse_argument_list();
-        return sema_.function_call(id_token.payload_, std::move(args));
+        auto ret_node = std::make_unique<AstFunctionCall>();
+        ret_node->identifier_ = identifier;
+        ret_node->arguments_ = std::move(args);
+        return ret_node;
     }
 
 
