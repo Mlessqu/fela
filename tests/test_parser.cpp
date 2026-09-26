@@ -5,7 +5,7 @@
 #include "AbstractSyntaxTree.h++"
 #include "Lexer.h++"
 #include "Parser.h++"
-#include "SemanticChecker.h++"
+
 
 constexpr int TEST_LITERAL_ZERO = 0;
 constexpr int TEST_LITERAL_ONE = 1;
@@ -44,6 +44,8 @@ static std::unique_ptr<fela::AstProgram> parse(std::string _source)
     return parser.parse_program();
 }
 
+TEST_SUITE("parser")
+{
 TEST_CASE("parser parses variable declarations")
 {
     auto program = parse("int a = 42; bool flag = true; int b;");
@@ -258,4 +260,5 @@ TEST_CASE("parser parses control flow statements")
     auto* fn = dynamic_cast<fela::AstFunctionDefinition*>(program->nodes_[0].get());
     REQUIRE(fn != nullptr);
     CHECK(fn->identifier_ == "run");
+}
 }
