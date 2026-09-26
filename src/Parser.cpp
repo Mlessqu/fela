@@ -56,7 +56,7 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens))
+    Parser::Parser(std::vector<Token> _tokens) : tokens_(std::move(_tokens))
     {
     }
 
@@ -347,7 +347,7 @@ namespace fela
         {
             auto ret_node = std::make_unique<AstUnaryExpression>();
             Token token = consume_token();
-            ret_node->operator_;
+            ret_node->operator_ = token.type_;
             ret_node->rhs_ = parse_unary_expression();
 
             return ret_node;

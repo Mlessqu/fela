@@ -9,8 +9,6 @@
 //no ast just syntax
 namespace fela
 {
-    class SemanticChecker;
-
     class Parser
     {
         std::vector<Token> tokens_;
@@ -28,7 +26,7 @@ namespace fela
         std::string expected_diff_symbol_error(std::string_view _expected);
     public:
 
-        explicit Parser(std::vector<Token> _tokens, SemanticChecker& _sema);
+        explicit Parser(std::vector<Token> _tokens);
         std::unique_ptr<AstProgram> parse_program();
     private:
         //functions
