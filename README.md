@@ -23,4 +23,6 @@ Modify parser to produce just the AST tree -done!
 Current goals: 
 
 Modify semantic checker to walk AST tree.
+1.Walk ast tree and just dump it into stream somewhere (for debugging)
+2.walk ast tree with semantic checker
 Review or rewrite parser tests written by AI
