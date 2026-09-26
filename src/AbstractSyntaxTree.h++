@@ -21,7 +21,7 @@ namespace fela
     //layer2
     struct AstExpression : public AstBase //value and type semantic check
     {
-        DataType resolved_type_;
+        DataType resolved_type_ = DataType::unresolved_type;
     };
 
     struct AstLiteralExpression : public AstExpression
@@ -57,7 +57,10 @@ namespace fela
     struct AstInstruction : public AstBase
     {
     };
-
+    struct AstPrimaryInstruction : public AstInstruction
+    {
+        std::unique_ptr<AstExpression> expression_;
+    };
     struct AstVariableDeclaration : public AstInstruction
     {
         std::string identifier_;

@@ -11,6 +11,7 @@ namespace fela
 
     enum class DataType
     {
+        unresolved_type,
         int_type,
         bool_type,
         void_type //<- for return types only not variables

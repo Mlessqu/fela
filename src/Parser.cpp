@@ -1,5 +1,6 @@
 #include "Parser.h++"
 #define FMT_HEADER_ONLY
+#include <iostream>
 #include <fmt/format.h>
 
 #include "SemanticChecker.h++"
@@ -42,7 +43,7 @@ namespace fela
             consume_token();
             return true;
         }
-        //scawy error msg here
+        std::cout << _error_message;
         return false;
     }
 
@@ -55,7 +56,7 @@ namespace fela
     }
 
 
-    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens)), sema_(_sema)
+    Parser::Parser(std::vector<Token> _tokens, SemanticChecker& _sema) : tokens_(std::move(_tokens))
     {
     }
 
@@ -144,7 +145,9 @@ namespace fela
         auto while_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         auto while_body = parse_instruction();
-        auto node_instruction = sema_.while_instruction(std::move(while_condition), std::move(while_body));
+        auto node_instruction = std::make_unique<AstWhileInstruction>();
+        node_instruction->body_ = std::move(while_body);
+        node_instruction->condition_ = std::move(while_condition);
         return node_instruction;
     }
 
@@ -162,8 +165,10 @@ namespace fela
             consume_token();
             optional_else = parse_instruction();
         }
-        auto return_node = sema_.if_instruction(std::move(if_condition), std::move(then_body),
-                                                std::move(optional_else));
+        auto return_node = std::make_unique<AstIfInstruction>();
+        return_node->condition_ = std::move(if_condition);
+        return_node->then_ = std::move(then_body);
+        return_node->else_branch_ = std::move(optional_else);
         return return_node;
     }
 
@@ -222,17 +227,26 @@ namespace fela
 
         Token op = consume_token(); // equal sign
         auto value = parse_expression(); // expression
-        auto return_node = sema_.assign_instruction(op.type_, id_token.payload_, std::move(value));
-        expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
+        if (expect_and_consume(TokenType::semi, expected_diff_symbol_error(";")))
+        {
+            return nullptr;
+        }
+        auto return_node = std::make_unique<AstAssignInstruction>();
+        return_node->identifier_ = id_token.payload_;
+        return_node->rhs_ = std::move(value);
         return return_node;
     }
 
 
     std::unique_ptr<AstInstruction> Parser::parse_primary_instruction()
     {
-        parse_expression();
-        expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
-        return nullptr;
+        auto ret_node = std::make_unique<AstPrimaryInstruction>();
+        ret_node->expression_ = parse_expression();
+        if (!expect_and_consume(TokenType::semi, expected_diff_symbol_error(";")))
+        {
+            return nullptr;
+        }
+        return ret_node;
     }
 
 
@@ -255,9 +269,15 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_grouped_expression()
     {
-        expect_and_consume(TokenType::open_group, expected_diff_symbol_error("("));
+        if (!expect_and_consume(TokenType::open_group, expected_diff_symbol_error("(")))
+        {
+            return nullptr;
+        }
         auto ret_node = parse_expression();
-        expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
+        if (!expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")")))
+        {
+            return nullptr;
+        }
         return ret_node;
     }
 
@@ -274,8 +294,10 @@ namespace fela
             }
             else
             {
-                Token id_token = consume_token(); // (
-                return sema_.variable_expression(id_token.payload_);
+                Token id_token = consume_token(); // identifier
+                auto ret_node = std::make_unique<AstVariableExpression>();
+                ret_node->identifier_ = id_token.payload_;
+                return ret_node;
             }
         }
         if (is_type(TokenType::integer_literal) || is_type(TokenType::false_boolean) ||
