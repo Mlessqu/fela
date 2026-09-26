@@ -372,16 +372,19 @@ namespace fela
         }
         return lhs;
     }
-    //TODO: correct all other binary expression, correct pattern reffer to parse_multiplying_expression
-
     std::unique_ptr<AstExpression> Parser::parse_additive_expression()
     {
         auto lhs = parse_multiplying_expression();
-        while(is_type(TokenType::minus) || is_type(TokenType::plus))
+        while (is_type(TokenType::minus) || is_type(TokenType::plus))
         {
             Token operator_token = consume_token();
             auto rhs = parse_multiplying_expression();
 
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->lhs_ = std::move(lhs);
+            ret_node->rhs_ = std::move(rhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
@@ -392,9 +395,14 @@ namespace fela
         auto lhs = parse_additive_expression();
         while (is_type(TokenType::smaller_op) || is_type(TokenType::greater_op))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_additive_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->lhs_ = std::move(lhs);
+            ret_node->rhs_ = std::move(rhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
@@ -405,9 +413,14 @@ namespace fela
         auto lhs = parse_relational_expression();
         while (is_type(TokenType::equal_op) || is_type(TokenType::not_equal_op))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_relational_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->lhs_ = std::move(lhs);
+            ret_node->rhs_ = std::move(rhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
@@ -418,9 +431,14 @@ namespace fela
         auto lhs = parse_equality_expression();
         while (is_type(TokenType::and_op))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_equality_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->lhs_ = std::move(lhs);
+            ret_node->rhs_ = std::move(rhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
@@ -431,9 +449,14 @@ namespace fela
         auto lhs = parse_boolean_logic_and_expression();
         while (is_type(TokenType::or_op))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_boolean_logic_and_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->lhs_ = std::move(lhs);
+            ret_node->rhs_ = std::move(rhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
