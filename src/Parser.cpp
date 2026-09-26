@@ -316,21 +316,26 @@ namespace fela
     std::unique_ptr<AstExpression> Parser::parse_literal_expression()
     {
         //literals we have right boolean and integer
+        auto literal_expression = std::make_unique<AstLiteralExpression>();
         Token literal = consume_token();
         if (literal.type_ == TokenType::integer_literal)
         {
-            int integer;
-
-            integer = std::stoi(std::string(literal.payload_));
-            return sema_.literal_expression(integer);
+            int integer = std::stoi(std::string(literal.payload_));
+            literal_expression->resolved_type_ = DataType::int_type;
+            literal_expression->value_ = integer;
+            return literal_expression;
         }
         if (literal.type_ == TokenType::true_boolean)
         {
-            return sema_.literal_expression(true);
+            literal_expression->resolved_type_ = DataType::bool_type;
+            literal_expression->value_ = true;
+            return literal_expression;
         }
         if (literal.type_ == TokenType::false_boolean)
         {
-            return sema_.literal_expression(false);
+            literal_expression->resolved_type_ = DataType::bool_type;
+            literal_expression->value_ = false;
+            return literal_expression;
         }
         return nullptr;
     }
@@ -338,11 +343,14 @@ namespace fela
 
     std::unique_ptr<AstExpression> Parser::parse_unary_expression()
     {
-        while (is_type(TokenType::plus) || is_type(TokenType::minus) || is_type(TokenType::negation_op))
+        if (is_type(TokenType::plus) || is_type(TokenType::minus) || is_type(TokenType::negation_op))
         {
+            auto ret_node = std::make_unique<AstUnaryExpression>();
             Token token = consume_token();
-            auto operand = parse_unary_expression();
-            return sema_.unary_operation(token.type_, std::move(operand));
+            ret_node->operator_;
+            ret_node->rhs_ = parse_unary_expression();
+
+            return ret_node;
         }
         return parse_primary_expression();
     }
@@ -351,24 +359,29 @@ namespace fela
     std::unique_ptr<AstExpression> Parser::parse_multiplying_expression()
     {
         auto lhs = parse_unary_expression();
-        while (is_type(TokenType::multiply_op) || is_type(TokenType::divide_op))
+        while(is_type(TokenType::multiply_op) || is_type(TokenType::divide_op))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_unary_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
+            auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->operator_ = operator_token.type_;
+            ret_node->rhs_ = std::move(rhs);
+            ret_node->lhs_ = std::move(lhs);
+            lhs = std::move(ret_node);
         }
         return lhs;
     }
-
+    //TODO: correct all other binary expression, correct pattern reffer to parse_multiplying_expression
 
     std::unique_ptr<AstExpression> Parser::parse_additive_expression()
     {
         auto lhs = parse_multiplying_expression();
-        while (is_type(TokenType::minus) || is_type(TokenType::plus))
+        while(is_type(TokenType::minus) || is_type(TokenType::plus))
         {
-            Token token = consume_token();
+            Token operator_token = consume_token();
             auto rhs = parse_multiplying_expression();
-            lhs = sema_.binary_operation(token.type_, std::move(lhs), std::move(rhs));
+
         }
         return lhs;
     }

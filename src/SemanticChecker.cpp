@@ -75,7 +75,7 @@ namespace fela
         {
             return nullptr;
         }
-        expr->operand_ = std::move(_unary_expression);
+        expr->rhs_ = std::move(_unary_expression);
         return expr;
     }
 

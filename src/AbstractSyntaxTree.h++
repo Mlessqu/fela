@@ -37,7 +37,7 @@ namespace fela
     struct AstUnaryExpression : public AstExpression
     {
         TokenType operator_;
-        std::unique_ptr<AstExpression> operand_ = nullptr;
+        std::unique_ptr<AstExpression> rhs_ = nullptr;
     };
 
     struct AstBinaryExpression : public AstExpression
