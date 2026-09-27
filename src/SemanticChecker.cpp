@@ -43,7 +43,7 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::unary_operation(TokenType _operator,
+    std::unique_ptr<AstExpression> SemanticChecker::unary_operation(Token _operator,
                                                                     std::unique_ptr<AstExpression> _unary_expression)
     {
         //+ - !
@@ -53,7 +53,7 @@ namespace fela
         }
         auto expr = std::make_unique<AstUnaryExpression>();
         expr->operator_ = _operator;
-        if (_operator == TokenType::negation_op)
+        if (_operator.type_ == TokenType::negation_op)
         {
             if (_unary_expression->resolved_type_ != DataType::bool_type)
             {
@@ -62,7 +62,7 @@ namespace fela
             }
             expr->resolved_type_ = DataType::bool_type;
         }
-        else if (_operator == TokenType::plus || _operator == TokenType::minus)
+        else if (_operator.type_ == TokenType::plus || _operator.type_ == TokenType::minus)
         {
             if (_unary_expression->resolved_type_ != DataType::int_type)
             {
@@ -80,7 +80,7 @@ namespace fela
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::binary_operation(TokenType _operator,
+    std::unique_ptr<AstExpression> SemanticChecker::binary_operation(Token _operator,
                                                                      std::unique_ptr<AstExpression> _lhs,
                                                                      std::unique_ptr<AstExpression> _rhs)
     {
@@ -92,7 +92,7 @@ namespace fela
         //+ - * /  > <  musi byc int
         // || && - musi byc boolean
         // == moga byc oba
-        switch (binary_operation->operator_)
+        switch (binary_operation->operator_.type_)
         {
         case TokenType::equal_op:
         case TokenType::not_equal_op:
@@ -223,10 +223,10 @@ namespace fela
 
 
     std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(
-        TokenType _operator, std::string_view _identifier,
+        Token _operator, std::string_view _identifier,
         std::unique_ptr<AstExpression> _rhs)
     {
-        if (_operator != TokenType::assign || !_rhs)
+        if (_operator.type_ != TokenType::assign || !_rhs)
         {
             return nullptr;
         }

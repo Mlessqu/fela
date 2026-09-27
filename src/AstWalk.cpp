@@ -128,7 +128,7 @@ namespace fela
                 dumped_nodes += ast_dump_node(binary_expr_ptr->lhs_.get());
                 }
                 Token binary_operator = binary_expr_ptr->operator_;
-                dumped_nodes+= fmt::format("{}Binary operator:{}\n",pad,)
+                dumped_nodes+= fmt::format("{}Binary operator:{}\n",pad,binary_operator.payload_);
 
                 break;
             }
