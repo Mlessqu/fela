@@ -175,7 +175,7 @@ namespace fela
                 if (is_int)
                 {
                     int value = std::get<int>(literal_expr_ptr->value_);
-                    dumped_nodes += fmt::format("{}Value:{}", pad, value);
+                    dumped_nodes += fmt::format("{}Value:{}\n", pad, value);
                 }
                 if (is_bool)
                 {
@@ -187,8 +187,8 @@ namespace fela
         case AstNodeType::variable_expression:
             {
                 auto variable_expr_ptr = static_cast<AstVariableExpression*>(_node);
-                dumped_nodes += fmt::format("{}Ast variable expression node:\n identifier: {}\n", pad,
-                                            variable_expr_ptr->identifier_);
+                dumped_nodes += fmt::format("{}Ast variable expression node:\n", pad);
+                dumped_nodes += fmt::format("{}  identifier: {}\n", pad, variable_expr_ptr->identifier_);
                 break;
             }
         case AstNodeType::function_call:
@@ -198,10 +198,10 @@ namespace fela
                 int arg_size = function_call_ptr->arguments_.size();
                 DataType return_type = function_call_ptr->resolved_type_;
                 std::string ret_string{data_type_to_string_view(return_type)};
-                dumped_nodes += fmt::format("{}Ast function call node:\n"
-                                            "with identifier:{}\n"
-                                            "return type:{}\n"
-                                            "And {} arguments:\n", pad, identifier, ret_string, arg_size);
+                dumped_nodes += fmt::format("{}Ast function call node:\n", pad);
+                dumped_nodes += fmt::format("{}identifier: {}\n", pad, identifier);
+                dumped_nodes += fmt::format("{}return type: {}\n", pad, ret_string);
+                dumped_nodes += fmt::format("{}with {} arguments:\n", pad, arg_size);
 
                 for (const auto& arg : function_call_ptr->arguments_)
                 {
@@ -216,17 +216,13 @@ namespace fela
                 DataType return_type = function_declaration_ptr->return_type_;
                 std::string ret_string{data_type_to_string_view(return_type)};
                 int param_size = function_declaration_ptr->parameters_.size();
-                dumped_nodes += fmt::format("{}Function declaration node:\n"
-                                            "{}identifier: {}\n"
-                                            "{}return type: {}\n"
-                                            "{}with {} params:\n",
-                                            pad,
-                                            pad, identifier,
-                                            pad, ret_string,
-                                            pad, param_size);
+                dumped_nodes += fmt::format("{}Function declaration node:\n", pad);
+                dumped_nodes += fmt::format("{}identifier: {}\n", pad, identifier);
+                dumped_nodes += fmt::format("{}return type: {}\n", pad, ret_string);
+                dumped_nodes += fmt::format("{}with {} params:\n", pad, param_size);
                 for (const auto& param : function_declaration_ptr->parameters_)
                 {
-                    dumped_nodes += fmt::format("{}  Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
+                    dumped_nodes += fmt::format("{}Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
                 }
                 break;
             }
@@ -237,17 +233,13 @@ namespace fela
                 DataType return_type = function_def_ptr->return_type_;
                 std::string ret_string{data_type_to_string_view(return_type)};
                 int param_size = function_def_ptr->parameters_.size();
-                dumped_nodes += fmt::format("{}Function definition node:\n"
-                                            "{}identifier: {}\n"
-                                            "{}return type: {}\n"
-                                            "{}with {} params:\n",
-                                            pad,
-                                            pad, identifier,
-                                            pad, ret_string,
-                                            pad, param_size);
+                dumped_nodes += fmt::format("{}Function definition node:\n", pad);
+                dumped_nodes += fmt::format("{}identifier: {}\n", pad, identifier);
+                dumped_nodes += fmt::format("{}return type: {}\n", pad, ret_string);
+                dumped_nodes += fmt::format("{}with {} params:\n", pad, param_size);
                 for (const auto& param : function_def_ptr->parameters_)
                 {
-                    dumped_nodes += fmt::format("{}  Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
+                    dumped_nodes += fmt::format("{}Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
                 }
                 dumped_nodes += fmt::format("{}Body:\n", pad);
                 if (function_def_ptr->body_)

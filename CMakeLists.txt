@@ -31,6 +31,8 @@ add_executable(fela_tests
         src/SymbolTable.h++
         src/SemanticChecker.cpp
         src/SemanticChecker.h++
+        src/AstWalk.cpp
+        src/AstWalk.h++
         tests/test_parser.cpp)
 target_include_directories(fela_tests PRIVATE src)
 
