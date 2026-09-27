@@ -35,6 +35,17 @@ namespace fela
     {
         std::unordered_map<std::string, Symbol> symbols_;
     };
+    constexpr std::string_view data_type_to_string_view(DataType _type)
+    {
+        switch (_type)
+        {
+        case DataType::int_type: return "int";
+        case DataType::bool_type: return "bool";
+        case DataType::void_type: return "void";
+        case DataType::unresolved_type: return "undefined";
+        }
+        return "unknown type, consider updating converter function in symbol table.h";
+    }
     struct ScopeStack
     {
         void push_scope();

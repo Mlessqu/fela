@@ -347,7 +347,7 @@ namespace fela
         {
             auto ret_node = std::make_unique<AstUnaryExpression>();
             Token token = consume_token();
-            ret_node->operator_ = token.type_;
+            ret_node->operator_ = token;
             ret_node->rhs_ = parse_unary_expression();
 
             return ret_node;
@@ -365,7 +365,7 @@ namespace fela
             auto rhs = parse_unary_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->rhs_ = std::move(rhs);
             ret_node->lhs_ = std::move(lhs);
             lhs = std::move(ret_node);
@@ -381,7 +381,7 @@ namespace fela
             auto rhs = parse_multiplying_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
             lhs = std::move(ret_node);
@@ -399,7 +399,7 @@ namespace fela
             auto rhs = parse_additive_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
             lhs = std::move(ret_node);
@@ -417,7 +417,7 @@ namespace fela
             auto rhs = parse_relational_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
             lhs = std::move(ret_node);
@@ -435,7 +435,7 @@ namespace fela
             auto rhs = parse_equality_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
             lhs = std::move(ret_node);
@@ -453,7 +453,7 @@ namespace fela
             auto rhs = parse_boolean_logic_and_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
-            ret_node->operator_ = operator_token.type_;
+            ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
             lhs = std::move(ret_node);
