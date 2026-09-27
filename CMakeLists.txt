@@ -15,6 +15,8 @@ add_executable(fela
         src/SymbolTable.h++
         src/SemanticChecker.cpp
         src/SemanticChecker.h++
+        src/AstWalk.cpp
+        src/AstWalk.h++
 )
 
 add_executable(fela_tests

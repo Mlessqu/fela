@@ -11,10 +11,29 @@ namespace fela
     //layer 2 AstExpression
     //layer 3 AstInstruction
     //layer 4 AstFunction
-
+enum class AstNodeType
+{
+    program,
+    variable_declaration,
+    assign_instruction,
+    if_instruction,
+    while_instruction,
+    return_instruction,
+    primary_instruction,
+    binary_expression,
+    unary_expression,
+    literal_expression,
+    variable_expression,
+    function_call,
+    function_declaration,
+    function_definition,
+    undefined
+};
 
     struct AstBase
     {
+        AstNodeType node_type_;
+        explicit AstBase(AstNodeType _type) : node_type_{_type}{}
         virtual ~AstBase() = default;
     };
 
@@ -110,7 +129,6 @@ namespace fela
 
     struct AstFunctionDefinition : public AstFunction
     {
-
         std::unique_ptr<AstBlockInstruction> body_ = nullptr;
     };
     struct AstProgram : public AstBase
