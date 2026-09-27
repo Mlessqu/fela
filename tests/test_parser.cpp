@@ -24,7 +24,7 @@ static std::vector<fela::Token> tokenize(std::string _source)
 {
     std::vector<fela::Token> tokens;
     fela::Lexer lexer;
-    lexer.load_source(std::move(_source));
+    lexer.load_from_string(std::move(_source));
     while (true)
     {
         fela::Token tok = lexer.next_token();

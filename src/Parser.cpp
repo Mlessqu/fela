@@ -192,7 +192,7 @@ namespace fela
             declare_var_node->type_ = DataType::void_type;
         }
         auto id_token = get_current_token();
-        expect_and_consume(TokenType::identifier, "Unexpected identifier syntax");
+        expect_and_consume(TokenType::identifier, "Unexpected identifier syntax\n");
         declare_var_node->identifier_ = id_token.payload_;
         if (is_type(TokenType::assign))
         {

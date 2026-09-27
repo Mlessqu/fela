@@ -118,6 +118,16 @@ namespace fela
                 }
                 break;
             }
+        case AstNodeType::block_instruction:
+            {
+                auto block_instruction_ptr = static_cast<AstBlockInstruction*>(_node);
+                dumped_nodes += fmt::format("{}Ast block instruction with {} instructions:\n",pad,block_instruction_ptr->body_.size());
+                for (const auto& instruction : block_instruction_ptr->body_)
+                {
+                    dumped_nodes+= ast_dump_node(instruction.get(),_indent+1);
+                }
+                break;
+            }
         case AstNodeType::binary_expression:
             {
                 auto binary_expr_ptr = static_cast<AstBinaryExpression*>(_node);
@@ -125,7 +135,7 @@ namespace fela
                 dumped_nodes += fmt::format("{}lhs:\n", pad);
                 if (binary_expr_ptr->lhs_)
                 {
-                    dumped_nodes += ast_dump_node(binary_expr_ptr->lhs_.get());
+                    dumped_nodes += ast_dump_node(binary_expr_ptr->lhs_.get(),_indent+1);
                 }
 
 
@@ -177,7 +187,7 @@ namespace fela
         case AstNodeType::variable_expression:
             {
                 auto variable_expr_ptr = static_cast<AstVariableExpression*>(_node);
-                dumped_nodes += fmt::format("{}Ast variable expression node:\n with identifier: \n", pad,
+                dumped_nodes += fmt::format("{}Ast variable expression node:\n identifier: {}\n", pad,
                                             variable_expr_ptr->identifier_);
                 break;
             }
@@ -207,33 +217,43 @@ namespace fela
                 std::string ret_string{data_type_to_string_view(return_type)};
                 int param_size = function_declaration_ptr->parameters_.size();
                 dumped_nodes += fmt::format("{}Function declaration node:\n"
-                                            "identifier:{}\n"
-                                            "return type:{}\n"
-                                            "and {} params",pad,identifier,ret_string,param_size);
+                                            "{}identifier: {}\n"
+                                            "{}return type: {}\n"
+                                            "{}with {} params:\n",
+                                            pad,
+                                            pad, identifier,
+                                            pad, ret_string,
+                                            pad, param_size);
                 for (const auto& param : function_declaration_ptr->parameters_)
                 {
-
+                    dumped_nodes += fmt::format("{}  Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
                 }
                 break;
             }
         case AstNodeType::function_definition:
             {
-                auto function_declaration_ptr = static_cast<AstFunctionDefinition*>(_node);
-                const std::string& identifier = function_declaration_ptr->identifier_;
-                DataType return_type = function_declaration_ptr->return_type_;
+                auto function_def_ptr = static_cast<AstFunctionDefinition*>(_node);
+                const std::string& identifier = function_def_ptr->identifier_;
+                DataType return_type = function_def_ptr->return_type_;
                 std::string ret_string{data_type_to_string_view(return_type)};
-                int param_size = function_declaration_ptr->parameters_.size();
+                int param_size = function_def_ptr->parameters_.size();
                 dumped_nodes += fmt::format("{}Function definition node:\n"
-                                            "identifier:{}\n"
-                                            "return type:{}\n"
-                                            "{} params\n"
-                                            "Body:\n",pad,identifier,ret_string,param_size);
-                for (const auto& param : function_declaration_ptr->parameters_)
+                                            "{}identifier: {}\n"
+                                            "{}return type: {}\n"
+                                            "{}with {} params:\n",
+                                            pad,
+                                            pad, identifier,
+                                            pad, ret_string,
+                                            pad, param_size);
+                for (const auto& param : function_def_ptr->parameters_)
                 {
-
+                    dumped_nodes += fmt::format("{}  Param: {} ({})\n", pad, param.name_, data_type_to_string_view(param.type_));
                 }
-                dumped_nodes+= ast_dump_node(function_declaration_ptr->body_.get(),_indent+1);
-
+                dumped_nodes += fmt::format("{}Body:\n", pad);
+                if (function_def_ptr->body_)
+                {
+                    dumped_nodes += ast_dump_node(function_def_ptr->body_.get(), _indent + 1);
+                }
                 break;
             }
         case AstNodeType::undefined:

@@ -70,15 +70,8 @@ namespace fela
     class Lexer
     {
     public:
-        bool load_file(std::string _file_path);
-        void load_source(std::string _source)
-        {
-            source_code_ = std::move(_source);
-            source_code_.push_back(SOURCE_NULL_TERMINATOR);
-            cursor_ = source_code_.data();
-            line_start_ = cursor_;
-            line_ = DEFAULT_START_LINE;
-        }
+        bool load_from_file(std::string _file_path);
+        void load_from_string(std::string _source);
         Token next_token();
         std::vector<Token> tokenize();
         std::vector<Token> tokenize(std::string _source);

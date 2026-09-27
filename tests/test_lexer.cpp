@@ -11,7 +11,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer returns eof on empty source")
     {
         fela::Lexer lexer;
-        lexer.load_source("");
+        lexer.load_from_string("");
 
         fela::Token tok = lexer.next_token();
         CHECK(tok.type_ == fela::TokenType::eof);
@@ -20,7 +20,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer recognizes keywords")
     {
         fela::Lexer lexer;
-        lexer.load_source("int bool void if else while return true false");
+        lexer.load_from_string("int bool void if else while return true false");
 
         CHECK(lexer.next_token().type_ == fela::TokenType::type_int);
         CHECK(lexer.next_token().type_ == fela::TokenType::type_bool);
@@ -37,7 +37,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer recognizes operators and symbols")
     {
         fela::Lexer lexer;
-        lexer.load_source("; , = == + - ! != / * > < ( ) { } && ||");
+        lexer.load_from_string("; , = == + - ! != / * > < ( ) { } && ||");
 
         CHECK(lexer.next_token().type_ == fela::TokenType::semi);
         CHECK(lexer.next_token().type_ == fela::TokenType::coma);
@@ -63,7 +63,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer recognizes identifiers and numbers")
     {
         fela::Lexer lexer;
-        lexer.load_source("x _counter val123 42 0");
+        lexer.load_from_string("x _counter val123 42 0");
 
         fela::Token tok1 = lexer.next_token();
         CHECK(tok1.type_ == fela::TokenType::identifier);
@@ -91,7 +91,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer skips comments and whitespace")
     {
         fela::Lexer lexer;
-        lexer.load_source("// single line comment\n42 /* block comment */ return");
+        lexer.load_from_string("// single line comment\n42 /* block comment */ return");
 
         fela::Token tok1 = lexer.next_token();
         CHECK(tok1.type_ == fela::TokenType::integer_literal);
@@ -108,7 +108,7 @@ TEST_SUITE("lexer")
     TEST_CASE("lexer tracks line and column numbers")
     {
         fela::Lexer lexer;
-        lexer.load_source("int");
+        lexer.load_from_string("int");
 
         fela::Token tok = lexer.next_token();
         CHECK(tok.type_ == fela::TokenType::type_int);

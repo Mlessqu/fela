@@ -6,7 +6,18 @@
 
 namespace fela
 {
-    bool Lexer::load_file(std::string _file_path)
+
+
+    void Lexer::load_from_string(std::string _source)
+    {
+        source_code_ = std::move(_source);
+        source_code_.push_back(SOURCE_NULL_TERMINATOR);
+        cursor_ = source_code_.data();
+        line_start_ = cursor_;
+        line_ = DEFAULT_START_LINE;
+    }
+
+    bool Lexer::load_from_file(std::string _file_path)
     {
         std::ifstream file(_file_path, std::ios::binary);
         if (!file.is_open())
@@ -289,7 +300,7 @@ namespace fela
 
     std::vector<Token> Lexer::tokenize(std::string _source)
     {
-        load_source(std::move(_source));
+        load_from_string(std::move(_source));
         return tokenize();
     }
 
