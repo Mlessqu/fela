@@ -255,7 +255,7 @@ namespace fela
             while (is_digit(*cursor_)) cursor_++;
             std::size_t len = cursor_ - tok_start;
             std::string_view payload{tok_start, len};
-            Token token{TokenType::integer_literal, line_, column, payload};
+            Token token{TokenType::integer_literal, line_, column, std::string{payload}};
             return token;
         }
         if (is_letter(*cursor_))
@@ -264,7 +264,7 @@ namespace fela
             std::size_t len = cursor_ - tok_start;
             std::string_view payload{tok_start, len};
             TokenType token_type = look_up_keyword_or_identifier(payload);
-            return Token{token_type, line_, column, payload};
+            return Token{token_type, line_, column, std::string{payload}};
         }
         cursor_++;
         return Token{TokenType::unknown, line_, column, {tok_start, 1}};

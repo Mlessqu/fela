@@ -133,7 +133,7 @@ namespace fela
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         auto return_node = std::make_unique<AstReturnInstruction>();
-        return_node->value_ = std::move(return_value);
+        return_node->expression_ = std::move(return_value);
         return return_node;
     }
 

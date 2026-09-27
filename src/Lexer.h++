@@ -56,12 +56,13 @@ namespace fela
         comment_block,
         unknown
     };
+
     struct Token
     {
         TokenType type_;
         unsigned int line_;
         unsigned int column_;
-        std::string_view payload_;
+        std::string payload_;
     };
     //TODO: the idea is lexer loads whole thing at once into memory then we traverse with std::string_view
     //1. Load file

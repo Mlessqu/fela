@@ -113,7 +113,7 @@ enum class AstNodeType
     };
     struct AstReturnInstruction : public AstInstruction
     {
-        std::unique_ptr<AstExpression> value_ = nullptr;
+        std::unique_ptr<AstExpression> expression_ = nullptr;
     };
 
     struct AstFunction : public AstBase
