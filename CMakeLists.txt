@@ -33,6 +33,9 @@ add_executable(fela_tests
         src/SemanticChecker.h++
         src/AstWalk.cpp
         src/AstWalk.h++
-        tests/test_parser.cpp)
+        tests/ParserFixture.h++
+        tests/test_parser_leaves.cpp
+        tests/test_parser_expressions.cpp
+        tests/test_parser_instructions.cpp)
 target_include_directories(fela_tests PRIVATE src)
 

@@ -227,7 +227,7 @@ namespace fela
 
         Token op = consume_token(); // equal sign
         auto value = parse_expression(); // expression
-        if (expect_and_consume(TokenType::semi, expected_diff_symbol_error(";")))
+        if (!expect_and_consume(TokenType::semi, expected_diff_symbol_error(";")))
         {
             return nullptr;
         }
@@ -530,7 +530,8 @@ namespace fela
             function_def->identifier_ = function_name;
             function_def->return_type_ = token_type_to_data_type(return_type.type_);
             function_def->parameters_ = std::move(params);
-            parse_block_instruction();
+            auto block = parse_block_instruction();
+            function_def->body_ = std::unique_ptr<AstBlockInstruction>(static_cast<AstBlockInstruction*>(block.release()));
             return function_def;
         }
         else

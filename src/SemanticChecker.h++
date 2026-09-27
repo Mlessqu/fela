@@ -15,6 +15,7 @@ namespace fela
     class SemanticChecker
     {
     public:
+
         std::unique_ptr<AstExpression> literal_expression(std::variant<bool, int> _literal_expr);
         std::unique_ptr<AstExpression> variable_expression(std::string_view _name_identifier);
         std::unique_ptr<AstExpression> unary_operation(Token _operator, std::unique_ptr<AstExpression> _unary_expression);
