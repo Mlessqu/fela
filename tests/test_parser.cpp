@@ -47,6 +47,7 @@ struct ParserFixture
 
 TEST_SUITE("parser")
 {
+
     TEST_CASE_FIXTURE(ParserFixture, "leaf node: integer literal")
     {
         const std::string expected =
@@ -80,14 +81,30 @@ TEST_SUITE("parser")
         CHECK(dump("bool flag = false;") == strip_indent(expected_false));
     }
 
-    TEST_CASE_FIXTURE(ParserFixture, "leaf node: variable declaration without init value")
+    TEST_CASE_FIXTURE(ParserFixture, "leaf node: variable declarations without init value")
     {
-        const std::string expected =
+        const std::string expected_int =
             "Ast Program node with 1 nodes\n"
             "Node number 1:\n"
             "  Ast variable declaration node with x identifier, without init value\n";
 
-        CHECK(dump("int x;") == strip_indent(expected));
+        CHECK(dump("int x;") == strip_indent(expected_int));
+
+        const std::string expected_bool =
+            "Ast Program node with 1 nodes\n"
+            "Node number 1:\n"
+            "  Ast variable declaration node with flag identifier, without init value\n";
+
+        CHECK(dump("bool flag;") == strip_indent(expected_bool));
+
+        const std::string expected_multiple =
+            "Ast Program node with 2 nodes\n"
+            "Node number 1:\n"
+            "  Ast variable declaration node with a identifier, without init value\n"
+            "Node number 2:\n"
+            "  Ast variable declaration node with b identifier, without init value\n";
+
+        CHECK(dump("int a; bool b;") == strip_indent(expected_multiple));
     }
 
     TEST_CASE_FIXTURE(ParserFixture, "leaf node: variable expression")
