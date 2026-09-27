@@ -1,12 +1,14 @@
 #include "AstWalk.h++"
-#include <iostream>
 #include <fmt/format.h>
 #include "AbstractSyntaxTree.h++"
 namespace fela
 {
-    std::string ast_dump_node(AstBase* _node)
+    constexpr int SPACES_PER_INDENT = 2;
+
+    std::string ast_dump_node(AstBase* _node, int _indent)
     {
         std::string dumped_nodes{};
+        std::string pad (_indent * SPACES_PER_INDENT,' ');
         if (!_node) return dumped_nodes;
         switch (_node->node_type_)
         {
@@ -14,12 +16,12 @@ namespace fela
         case AstNodeType::program:
             {
                 auto ast_program_ptr = static_cast<AstProgram*>(_node);
-                dumped_nodes += fmt::format("Ast Program node with {} nodes \n", ast_program_ptr->nodes_.size());
+                dumped_nodes += fmt::format("{}Ast Program node with {} nodes \n",pad, ast_program_ptr->nodes_.size());
                 int i =1;
                 for (const auto& node : ast_program_ptr->nodes_)
                 {
                     dumped_nodes += fmt::format("Node number: {}:\n",i);
-                    dumped_nodes += ast_dump_node(node.get());
+                    dumped_nodes += ast_dump_node(node.get(), _indent+1);
                     ++i;
                 }
                 break;
@@ -35,7 +37,7 @@ namespace fela
                 }else
                 {
                     dumped_nodes+= fmt::format(", with init value:\n");
-                    dumped_nodes+= ast_dump_node(ast_variable_decl_ptr->init_value_.get());
+                    dumped_nodes+= ast_dump_node(ast_variable_decl_ptr->init_value_.get(), _indent+1);
                 }
                 break;
             }
@@ -44,7 +46,6 @@ namespace fela
                 auto assign_instruction_ptr = static_cast<AstAssignInstruction*>(_node);
                 dumped_nodes += fmt::format("Assign instruction node with {} identifier\n",
                                             assign_instruction_ptr->identifier_);
-                std::cout << dumped_nodes;
                 break;
             }
         case AstNodeType::if_instruction:
@@ -55,6 +56,7 @@ namespace fela
                 if (if_instruction_ptr->else_branch_)
                 {
                     dumped_nodes += fmt::format("with else\n");
+                    dumped_nodes += ast_dump_node(if_instruction_ptr->else_branch_.get(), TODO);
                 }else
                 {
                     dumped_nodes += fmt::format("without else\n");
