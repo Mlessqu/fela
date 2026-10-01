@@ -55,7 +55,7 @@ namespace fela
         [[nodiscard]] bool insert_symbol(const std::string& _name, const Symbol& _symbol);
         bool insert_var_symbol(std::string_view _name, DataType _type);
         bool insert_func_symbol(std::string_view _name, DataType _type, const std::vector<VariableSymbol>& _params);
-        const Symbol* lookup(const std::string& _name) const;
+        const Symbol* lookup(const std::string& _name, bool _current_scope_only = false) const;
     private:
 
         std::vector<Scope> scopes_;

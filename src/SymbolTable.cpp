@@ -47,7 +47,7 @@ namespace fela
 
     bool ScopeStack::insert_var_symbol(std::string_view _name, DataType _type)
     {
-        if (lookup(std::string{_name}))
+        if (lookup(std::string{_name}, true))
         {
             //TODO: error msg
             //symbol already exists!
@@ -70,7 +70,7 @@ namespace fela
 
     bool ScopeStack::insert_func_symbol(std::string_view _name, DataType _type, const std::vector<VariableSymbol>& _params)
     {
-        if (lookup(std::string{_name}))
+        if (lookup(std::string{_name}, true))
         {
             return false;
         }
@@ -83,8 +83,17 @@ namespace fela
     }
 
 
-    const Symbol* ScopeStack::lookup(const std::string& _name) const
+    const Symbol* ScopeStack::lookup(const std::string& _name, bool _current_scope_only) const
     {
+        if (scopes_.empty()) return nullptr;
+
+        if (_current_scope_only)
+        {
+            const auto& symbols = scopes_.back().symbols_;
+            auto itr = symbols.find(_name);
+            return itr != symbols.end() ? &itr->second : nullptr;
+        }
+
         //go over vector from r begin to r end,
         for (auto itr = this->scopes_.rbegin(); itr != scopes_.rend(); itr++) //outer
         {

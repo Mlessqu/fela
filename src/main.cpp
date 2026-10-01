@@ -4,6 +4,7 @@
 #include <string_view>
 #include <vector>
 
+#include "AstWalk.h++"
 #include "Lexer.h++"
 #include "Parser.h++"
 #include "SemanticChecker.h++"
@@ -101,7 +102,7 @@ int main(int _argc, char** _argv)
 
     if (cli->dump_ast)
     {
-        std::cout << "AST dump requested\n";
+        std::cout << fela::ast_dump_node(program.get());
     }
 
     fela::SemanticChecker sema;

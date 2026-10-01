@@ -9,6 +9,7 @@ namespace fela
 {
     constexpr size_t MAX_ERRORS = 20;
     constexpr std::string_view ENTRY_POINT_IDENTIFIER = "main";
+    constexpr bool CURRENT_SCOPE_ONLY = true;
 
     bool SemanticChecker::check(AstProgram* _program)
     {
@@ -112,7 +113,7 @@ namespace fela
                     std::string err_msg = fmt::format("variable '{}' cannot be void", identifier);
                     push_error(_node, err_msg);
                 }
-                if (symbol_table_.lookup(identifier) != nullptr)
+                if (symbol_table_.lookup(identifier, CURRENT_SCOPE_ONLY) != nullptr)
                 {
                     std::string err_msg = fmt::format("Redefinition of '{}' identifier", identifier);
                     push_error(_node, err_msg);
@@ -384,7 +385,7 @@ namespace fela
                     break;
                 }
 
-                const Symbol* symbol = symbol_table_.lookup(identifier);
+                const Symbol* symbol = symbol_table_.lookup(identifier, CURRENT_SCOPE_ONLY);
                 if (symbol != nullptr)
                 {
                     std::string err_msg = fmt::format("Redefinition of identifier '{}'", identifier);
@@ -452,7 +453,7 @@ namespace fela
                     break;
                 }
 
-                const Symbol* symbol = symbol_table_.lookup(identifier);
+                const Symbol* symbol = symbol_table_.lookup(identifier, CURRENT_SCOPE_ONLY);
                 if (symbol != nullptr)
                 {
                     std::string err_msg = fmt::format("Redefinition of identifier '{}'", identifier);
