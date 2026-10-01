@@ -21,13 +21,16 @@ TEST_SUITE("semantic checker")
 
     TEST_CASE_FIXTURE(SemanticFixture, "assignment: valid and type mismatch")
     {
-        CHECK(check("int a = 1; a = 2;"));
-        CHECK_FALSE(check("int a = 1; a = false;"));
+        CHECK(check("int a = 1; void main() { a = 2; }"));
+        CHECK_FALSE(check("int a = 1; void main() { a = false; }"));
+
+        CHECK(check("void main() { int a = 1; a = 2; }"));
+        CHECK_FALSE(check("void main() { int a = 1; a = false; }"));
     }
 
     TEST_CASE_FIXTURE(SemanticFixture, "assignment: undeclared variable")
     {
-        CHECK_FALSE(check("x = 42;"));
+        CHECK_FALSE(check("void main() { x = 42; }"));
         CHECK(has_error_containing("Unknown identifier"));
     }
 

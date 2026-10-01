@@ -1,5 +1,6 @@
 #pragma once
 #include <doctest/doctest.h>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -21,7 +22,13 @@ struct SemanticFixture
         fela::Parser parser(tokens);
         auto program = parser.parse_program();
         REQUIRE(program != nullptr);
-        return checker_.check(program.get());
+        checker_ = fela::SemanticChecker{};
+        bool result = checker_.check(program.get());
+        for (const auto& err : checker_.errors())
+        {
+            std::cout << err;
+        }
+        return result;
     }
 
     bool has_error_containing(std::string_view _substr) const

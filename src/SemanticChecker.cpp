@@ -8,12 +8,15 @@
 namespace fela
 {
     constexpr size_t MAX_ERRORS = 20;
-
+    constexpr std::string_view ENTRY_POINT_IDENTIFIER = "main";
 
     bool SemanticChecker::check(AstProgram* _program)
     {
+        symbol_table_.push_scope();
         check_node(_program);
-        assert(!symbol_table_.is_stack_empty() && "Scope stack isn't empty, check push_scope() calls");
+        symbol_table_.pop_scope();
+        assert(symbol_table_.is_stack_empty() && "Scope stack isnt empty, check push_scope() calls");
+
         return errors_.empty();
     }
 
