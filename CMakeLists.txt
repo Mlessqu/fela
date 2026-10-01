@@ -36,6 +36,8 @@ add_executable(fela_tests
         tests/ParserFixture.h++
         tests/test_parser_leaves.cpp
         tests/test_parser_expressions.cpp
-        tests/test_parser_instructions.cpp)
+        tests/test_parser_instructions.cpp
+        tests/SemanticFixture.h++
+        tests/test_semantic_checker.cpp)
 target_include_directories(fela_tests PRIVATE src)
 
