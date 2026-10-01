@@ -21,16 +21,16 @@ TEST_SUITE("semantic checker")
 
     TEST_CASE_FIXTURE(SemanticFixture, "assignment: valid and type mismatch")
     {
-        CHECK(check("int a = 1; void main() { a = 2; }"));
-        CHECK_FALSE(check("int a = 1; void main() { a = false; }"));
+        CHECK(check("int a = 1; int main() { a = 2; }"));
+        CHECK_FALSE(check("int a = 1; int main() { a = false; }"));
 
-        CHECK(check("void main() { int a = 1; a = 2; }"));
-        CHECK_FALSE(check("void main() { int a = 1; a = false; }"));
+        CHECK(check("int main() { int a = 1; a = 2; }"));
+        CHECK_FALSE(check("int main() { int a = 1; a = false; }"));
     }
 
     TEST_CASE_FIXTURE(SemanticFixture, "assignment: undeclared variable")
     {
-        CHECK_FALSE(check("void main() { x = 42; }"));
+        CHECK_FALSE(check("int main() { x = 42; }"));
         CHECK(has_error_containing("Unknown identifier"));
     }
 
@@ -54,13 +54,13 @@ TEST_SUITE("semantic checker")
 
     TEST_CASE_FIXTURE(SemanticFixture, "function call: wrong argument count")
     {
-        CHECK_FALSE(check("int add(int a, int b); add(1);"));
+        CHECK_FALSE(check("int add(int a, int b); int main() { add(1); }"));
         CHECK(has_error_containing("expects 2 arguments"));
     }
 
     TEST_CASE_FIXTURE(SemanticFixture, "function call: argument type mismatch")
     {
-        CHECK_FALSE(check("int add(int a, int b); add(1, true);"));
+        CHECK_FALSE(check("int add(int a, int b); int main() { add(1, true); }"));
         CHECK(has_error_containing("type mismatch"));
     }
 }
