@@ -43,7 +43,7 @@ namespace fela
             consume_token();
             return true;
         }
-        std::cout << _error_message;
+        push_error(get_current_token(), std::move(_error_message));
         return false;
     }
 
@@ -53,6 +53,18 @@ namespace fela
         const Token& tok = get_current_token();
         return fmt::format("At line {}, col {} expected '{}' but got '{}'", tok.line_, tok.column_, _expected,
                            tok.payload_);
+    }
+
+
+    void Parser::push_error(const Token& _token, std::string _err_msg)
+    {
+        errors_.push_back(std::move(_err_msg) + "\n");
+    }
+
+
+    const std::vector<std::string>& Parser::errors() const
+    {
+        return errors_;
     }
 
 
@@ -82,7 +94,10 @@ namespace fela
             }
             else
             {
-                auto invalid_token = consume_token();
+                const auto invalid_token = consume_token();
+                push_error(invalid_token, fmt::format("At line {}, col {} unexpected token '{}' at global scope",
+                                                      invalid_token.line_, invalid_token.column_,
+                                                      invalid_token.payload_));
                 return nullptr;
             }
         }
