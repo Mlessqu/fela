@@ -12,19 +12,58 @@ namespace fela
 
     bool SemanticChecker::check(AstProgram* _program)
     {
-        symbol_table_.push_scope();
         check_node(_program);
-        symbol_table_.pop_scope();
         assert(symbol_table_.is_stack_empty() && "Scope stack isnt empty, check push_scope() calls");
 
         return errors_.empty();
     }
 
 
+    bool SemanticChecker::is_global_scope() const
+    {
+        return symbol_table_.is_global_scope();
+    }
+
+
+    bool SemanticChecker::check_main()
+    {
+        const Symbol* symbol = symbol_table_.lookup(std::string{ENTRY_POINT_IDENTIFIER});
+        if (!symbol)
+        {
+            return true;
+        }
+
+        auto func_sym = std::get_if<FunctionSymbol>(&symbol->symbol_signature_);
+        if (!func_sym)
+        {
+            push_error(nullptr, fmt::format("'{}' must be a function", ENTRY_POINT_IDENTIFIER));
+            return false;
+        }
+
+        bool is_valid = true;
+        if (func_sym->return_type_ != DataType::int_type)
+        {
+            push_error(nullptr, fmt::format("'{}' function must return 'int'", ENTRY_POINT_IDENTIFIER));
+            is_valid = false;
+        }
+
+        if (!func_sym->param_types_.empty())
+        {
+            push_error(nullptr, fmt::format("'{}' function must take no parameters", ENTRY_POINT_IDENTIFIER));
+            is_valid = false;
+        }
+
+        return is_valid;
+    }
+
+
     void SemanticChecker::push_error(AstBase* _node, std::string _err_msg)
     {
         std::string err_msg{};
-        err_msg += fmt::format("Line {},col {}: ", _node->line_, _node->column_);
+        if (_node)
+        {
+            err_msg += fmt::format("Line {},col {}: ", _node->line_, _node->column_);
+        }
         err_msg += _err_msg;
         err_msg += "\n";
         errors_.push_back(err_msg);
@@ -330,6 +369,13 @@ namespace fela
                 DataType return_type = function_declaration_ptr->return_type_;
                 const auto& params = function_declaration_ptr->parameters_;
 
+                if (!is_global_scope())
+                {
+                    std::string err_msg = fmt::format("Function declaration '{}' must be at global scope", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
                 if (return_type == DataType::unresolved_type)
                 {
                     std::string err_msg = fmt::format("Function '{}' has unresolved return type", identifier);
@@ -378,6 +424,10 @@ namespace fela
                 }
 
                 symbol_table_.insert_func_symbol(identifier, return_type, params);
+                if (identifier == ENTRY_POINT_IDENTIFIER)
+                {
+                    check_main();
+                }
                 break;
             }
         case AstNodeType::function_definition:
@@ -386,7 +436,15 @@ namespace fela
                 const std::string& identifier = function_def_ptr->identifier_;
                 DataType return_type = function_def_ptr->return_type_;
                 const auto& params = function_def_ptr->parameters_;
-               if (return_type == DataType::unresolved_type)
+
+                if (!is_global_scope())
+                {
+                    std::string err_msg = fmt::format("Function definition '{}' must be at global scope", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                if (return_type == DataType::unresolved_type)
                 {
                     std::string err_msg = fmt::format("Function '{}' has unresolved return type", identifier);
                     push_error(_node, err_msg);
@@ -434,6 +492,10 @@ namespace fela
                 }
 
                 symbol_table_.insert_func_symbol(identifier, return_type, params);
+                if (identifier == ENTRY_POINT_IDENTIFIER)
+                {
+                    check_main();
+                }
                 symbol_table_.push_scope();
                 for (const auto& param:params)
                 {
