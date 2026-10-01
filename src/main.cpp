@@ -11,5 +11,7 @@ int main(int _args, char** _arg_vals)
     auto tokens = lexer.tokenize();
     fela::Parser parser(tokens);
     auto program = parser.parse_program();
+    fela::SemanticChecker sema;
+    sema.check(program.get());
     return 0;
 }

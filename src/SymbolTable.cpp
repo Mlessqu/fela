@@ -13,17 +13,22 @@ namespace fela
 
     void ScopeStack::pop_scope()
     {
-        if (!scopes_.empty())
-        {
-            assert(scopes_.empty()&& "Too many pop_scope() calls");
+
+            assert(!scopes_.empty()&& "Too many pop_scope() calls");
             scopes_.pop_back();
-        }
+
     }
 
 
     bool ScopeStack::is_stack_empty() const
     {
         return scopes_.empty();
+    }
+
+
+    bool ScopeStack::is_global_scope() const
+    {
+        return scopes_.size() == 1;
     }
 
 

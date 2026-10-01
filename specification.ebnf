@@ -26,7 +26,7 @@ ignored_tokens = whitespace | comment;
 integer_literal = digit, {digit};
 boolean_literal = "true" | "false";
 literal         = integer_literal | boolean_literal;
-
+entry_point_literal = "main";
 (* Types *)
 type_keyword = "int" | "bool" | "void";
 
@@ -70,7 +70,6 @@ close_group = ")";
 
 (* Identifier *)
 identifier = (letter| "_"), {letter | digit | "_"};
-
 
 (* ========================================================================== *)
 (* LAYER 2: EXPRESSIONS                                                       *)
@@ -117,4 +116,5 @@ function_definition = type_keyword, identifier, param_list, block_instruction;
 function_call = identifier, argument_list;
 
 (* Program *)
-program = { function_definition | function_declaration | variable_declaration };
+entrypoint = function_definition;
+program = { function_definition | function_declaration | variable_declaration | entry_point};
