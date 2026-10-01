@@ -8,6 +8,8 @@ This repo is meant to document that journey.
 
 **Fela** is a micro C-subset language and 2-pass compiler frontend (Lexer -> Parser -> AST -> Semantic Checker).
 
+It follows standard C syntax: curly braces `{}` for scopes, semicolons `;` terminating statements, C-style function declarations/definitions, and familiar keywords (`if`, `else`, `while`, `return`). If it looks like valid C (without pointers, structs, or `#include`), it parses as Fela.
+
 ## Usage
 
 ```bash
@@ -47,17 +49,26 @@ fela --path <source_file> [options]
 ## Language Constraints
 
 - **Single-File Compilation (No Linker):**
-  - No linker or multi-file linking yet. All code (functions, global declarations, and `main()`) must be in a single source file.
-- **Types:**
+  - No linker or multi-file linking. All code (functions, global declarations, and `main()`) must be in a single source file.
+- **Types & Literals:**
   - `int`, `bool`.
   - `void` only for function return type (variables cannot be `void`).
+  - Literals: integer numbers, `true`, `false`.
+- **Identifiers:**
+  - Must start with `[a-zA-Z_]`, followed by letters, digits, or `_`.
 - **Entry point:**
   - Must define `int main()` with no parameters.
 - **Functions:**
   - Global scope only (no nested functions).
+  - Forward declarations supported (`type name(params);`).
   - Unique parameter names per function.
-- **Scopes:**
+  - Return statements: `return;` for `void`, `return <expr>;` matching return type.
+- **Variables & Scopes:**
+  - Global variables allowed at file scope.
+  - Optional initialization (`int x = 10;` or `int x;`).
   - Lexical scoping with shadowing in inner blocks.
+- **Instructions:**
+  - Assignments (`x = expr;`), declarations, blocks (`{ ... }`), and expression statements (`foo();`).
 - **Control Flow:**
   - `if (...)` and `while (...)` conditions must be `bool`.
 - **Operators:**
