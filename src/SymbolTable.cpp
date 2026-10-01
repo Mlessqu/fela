@@ -1,5 +1,7 @@
 #include "SymbolTable.h++"
 
+#include <cassert>
+
 namespace fela
 {
     //implementation details here
@@ -13,8 +15,15 @@ namespace fela
     {
         if (!scopes_.empty())
         {
+            assert(scopes_.empty()&& "Too many pop_scope() calls");
             scopes_.pop_back();
         }
+    }
+
+
+    bool ScopeStack::is_stack_empty() const
+    {
+        return scopes_.empty();
     }
 
 
@@ -33,7 +42,7 @@ namespace fela
 
     bool ScopeStack::insert_var_symbol(std::string_view _name, DataType _type)
     {
-        if (!lookup(std::string{_name}))
+        if (lookup(std::string{_name}))
         {
             //TODO: error msg
             //symbol already exists!
@@ -56,7 +65,7 @@ namespace fela
 
     bool ScopeStack::insert_func_symbol(std::string_view _name, DataType _type, const std::vector<VariableSymbol>& _params)
     {
-        if (!lookup(std::string{_name}))
+        if (lookup(std::string{_name}))
         {
             return false;
         }

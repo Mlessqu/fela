@@ -1,335 +1,544 @@
 #include "SemanticChecker.h++"
 
+#include <cassert>
+#include <fmt/format.h>
+
 #include "AbstractSyntaxTree.h++"
 
 namespace fela
 {
-    std::unique_ptr<AstExpression> SemanticChecker::literal_expression(std::variant<bool, int> _literal_expr)
+    constexpr size_t MAX_ERRORS = 20;
+
+
+    bool SemanticChecker::check(AstProgram* _program)
     {
-        auto expression = std::make_unique<AstLiteralExpression>();
-        if (std::holds_alternative<int>(_literal_expr))
-        {
-            expression->resolved_type_ = DataType::int_type;
-        }
-        else if (std::holds_alternative<bool>(_literal_expr))
-        {
-            expression->resolved_type_ = DataType::bool_type;
-        }
-        else
-        {
-            //literal expression must be bool or int error!
-            expression->resolved_type_ = DataType::void_type;
-        }
-        return expression;
+        check_node(_program);
+        assert(!symbol_table_.is_stack_empty() && "Scope stack isn't empty, check push_scope() calls");
+        return errors_.empty();
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::variable_expression(std::string_view _name_identifier)
+    void SemanticChecker::push_error(AstBase* _node, std::string _err_msg)
     {
-        const Symbol* map_lookup = symbol_table_.lookup(std::string(_name_identifier));
-        if (!map_lookup)
+        std::string err_msg{};
+        err_msg += fmt::format("Line {},col {}: ", _node->line_, _node->column_);
+        err_msg += _err_msg;
+        err_msg += "\n";
+        errors_.push_back(err_msg);
+        if (errors_.size() >= MAX_ERRORS)
         {
-            return nullptr;
+            should_abort_ = true;
         }
-        if (!std::holds_alternative<VariableSymbol>(map_lookup->symbol_signature_))
-        {
-            //error, expected it to be variable!
-            return nullptr;
-        }
-        auto variable = std::make_unique<AstVariableExpression>();
-        variable->identifier_ = _name_identifier;
-        variable->resolved_type_ = std::get<VariableSymbol>(map_lookup->symbol_signature_).type_;
-        return variable;
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::unary_operation(Token _operator,
-                                                                    std::unique_ptr<AstExpression> _unary_expression)
+    const std::vector<std::string>& SemanticChecker::errors() const
     {
-        //+ - !
-        if (!_unary_expression)
-        {
-            return nullptr;
-        }
-        auto expr = std::make_unique<AstUnaryExpression>();
-        expr->operator_ = _operator;
-        if (_operator.type_ == TokenType::negation_op)
-        {
-            if (_unary_expression->resolved_type_ != DataType::bool_type)
-            {
-                //error! must be bool type!
-                return nullptr;
-            }
-            expr->resolved_type_ = DataType::bool_type;
-        }
-        else if (_operator.type_ == TokenType::plus || _operator.type_ == TokenType::minus)
-        {
-            if (_unary_expression->resolved_type_ != DataType::int_type)
-            {
-                //error must be integer type!
-                return nullptr;
-            }
-            expr->resolved_type_ = DataType::int_type;
-        }
-        else
-        {
-            return nullptr;
-        }
-        expr->rhs_ = std::move(_unary_expression);
-        return expr;
+        return errors_;
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::binary_operation(Token _operator,
-                                                                     std::unique_ptr<AstExpression> _lhs,
-                                                                     std::unique_ptr<AstExpression> _rhs)
-    {
-        if (!_lhs) return nullptr;
-        if (!_rhs) return nullptr;
-        auto binary_operation = std::make_unique<AstBinaryExpression>();
-        binary_operation->operator_ = _operator;
+    bool SemanticChecker::check_node(AstBase* _node)
 
-        //+ - * /  > <  musi byc int
-        // || && - musi byc boolean
-        // == moga byc oba
-        switch (binary_operation->operator_.type_)
+    {
+        if (!_node) return false;
+        if (should_abort_ == true) return false;
+        switch (_node->node_type_)
         {
-        case TokenType::equal_op:
-        case TokenType::not_equal_op:
+        case AstNodeType::program:
             {
-                if (_lhs->resolved_type_ == DataType::bool_type && _rhs->resolved_type_ == DataType::bool_type)
+                auto ast_program_ptr = static_cast<AstProgram*>(_node);
+                symbol_table_.push_scope();
+                for (const auto& node : ast_program_ptr->nodes_)
                 {
-                    binary_operation->resolved_type_ = DataType::bool_type;;
-                    binary_operation->lhs_ = std::move(_lhs);
-                    binary_operation->rhs_ = std::move(_rhs);
-                    return binary_operation;
+                    check_node(node.get());
                 }
-                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_ == DataType::int_type)
-                {
-                    binary_operation->resolved_type_ = DataType::bool_type;
-                    binary_operation->lhs_ = std::move(_lhs);
-                    binary_operation->rhs_ = std::move(_rhs);
-                    return binary_operation;
-                }
-                return nullptr;
+                symbol_table_.pop_scope();
+                break;
             }
-            break;
-        case TokenType::and_op:
-        case TokenType::or_op:
+        case AstNodeType::variable_declaration:
             {
-                // && and ||
-                if (_lhs->resolved_type_ == DataType::bool_type && _rhs->resolved_type_ == DataType::bool_type)
+                auto ast_variable_decl_ptr = static_cast<AstVariableDeclaration*>(_node);
+                const auto& identifier = ast_variable_decl_ptr->identifier_;
+                if (ast_variable_decl_ptr->type_ == DataType::unresolved_type)
                 {
-                    binary_operation->resolved_type_ = DataType::bool_type;
-                    binary_operation->lhs_ = std::move(_lhs);
-                    binary_operation->rhs_ = std::move(_rhs);
-                    return binary_operation;
+                    std::string err_message = fmt::format("variable '{}' has unresolved type", identifier);
+                    push_error(ast_variable_decl_ptr, err_message);
                 }
+                if (ast_variable_decl_ptr->type_ == DataType::void_type)
+                {
+                    std::string err_msg = fmt::format("variable '{}' cannot be void", identifier);
+                    push_error(_node, err_msg);
+                }
+                if (symbol_table_.lookup(identifier) != nullptr)
+                {
+                    std::string err_msg = fmt::format("Redefinition of '{}' identifier", identifier);
+                    push_error(_node, err_msg);
+                }
+                if (!symbol_table_.insert_var_symbol(identifier, ast_variable_decl_ptr->type_))
+                {
+                }
+                //genuinely don't know if I should even handle bool
+
+                if (ast_variable_decl_ptr->init_value_)
+                {
+                    check_node(ast_variable_decl_ptr->init_value_.get());
+                    if (ast_variable_decl_ptr->init_value_->resolved_type_ != ast_variable_decl_ptr->type_)
+                    {
+                        std::string error_msg("types must match!");
+                        push_error(_node, error_msg);
+                    }
+                }
+                break;
             }
-            break;
+        case AstNodeType::assign_instruction:
+            {
+                auto assign_instruction_ptr = static_cast<AstAssignInstruction*>(_node);
+                const std::string& identifier = assign_instruction_ptr->identifier_;
+                assign_instruction_ptr->rhs_;
+                const Symbol* symbol = symbol_table_.lookup(identifier);
+                if (!symbol)
+                {
+                    std::string err_msg = fmt::format("Unknown identifier: {}", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+                auto symbol_type = std::get_if<VariableSymbol>(&symbol->symbol_signature_);
+                if (!symbol_type)
+                {
+                    std::string err_msg = fmt::format("You can't assign value to the symbol {}", symbol_type->name_);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                if (!check_node(assign_instruction_ptr->rhs_.get()))
+                {
+                    break;
+                }
+                if (symbol_type->type_ != assign_instruction_ptr->rhs_->resolved_type_)
+                {
+                    std::string err_msg = fmt::format("Type of {}, doesn't match the result type of expression",
+                                                      identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                break;
+            }
+        case AstNodeType::if_instruction:
+            {
+                auto if_instruction_ptr = static_cast<AstIfInstruction*>(_node);
+                if (!check_node(if_instruction_ptr->condition_.get()))
+                {
+                    break;
+                }
+
+                if (if_instruction_ptr->condition_->resolved_type_ != DataType::bool_type)
+                {
+                    push_error(_node, "if conditional must be boolean type");
+                    break;
+                }
+                symbol_table_.push_scope();
+                if (!check_node(if_instruction_ptr->then_.get()))
+                {
+                    symbol_table_.pop_scope();
+                    break;
+                }
+                symbol_table_.pop_scope();
+                symbol_table_.push_scope();
+                if (!check_node(if_instruction_ptr->else_branch_.get()))
+                {
+                    symbol_table_.pop_scope();
+                    break;
+                }
+                symbol_table_.pop_scope();
+                break;
+            }
+
+        case AstNodeType::while_instruction:
+            {
+                auto while_instruction_ptr = static_cast<AstWhileInstruction*>(_node);
+                if (!check_node(while_instruction_ptr->condition_.get()))
+                {
+                    break;
+                }
+                symbol_table_.push_scope();
+                if (!check_node(while_instruction_ptr->body_.get()))
+                {
+                    symbol_table_.pop_scope();
+                    break;
+                }
+                symbol_table_.pop_scope();
+                break;
+            }
+        case AstNodeType::return_instruction:
+            {
+                auto return_instruction_pointer = static_cast<AstReturnInstruction*>(_node);
+                if (!check_node(return_instruction_pointer->expression_.get()))
+                {
+                    break;
+                }
+                break;
+            }
+        case AstNodeType::primary_instruction:
+            {
+                auto primary_instruction_ptr = static_cast<AstPrimaryInstruction*>(_node);
+                if (!check_node(primary_instruction_ptr->expression_.get()))
+                {
+                    break;
+                }
+                break;
+            }
+        case AstNodeType::block_instruction:
+            {
+                auto block_instruction_ptr = static_cast<AstBlockInstruction*>(_node);
+                symbol_table_.push_scope();
+                for (const auto& instruction : block_instruction_ptr->body_)
+                {
+                    check_node(instruction.get());
+                }
+                symbol_table_.pop_scope();
+            }
+        case AstNodeType::binary_expression:
+            {
+                auto binary_expr_ptr = static_cast<AstBinaryExpression*>(_node);
+                symbol_table_.push_scope();
+                if (!check_binary_expression(binary_expr_ptr))
+                {
+                    symbol_table_.pop_scope();
+                    break;
+                }
+                symbol_table_.pop_scope();
+                break;
+            }
+        case AstNodeType::unary_expression:
+            {
+                auto unary_expr_ptr = static_cast<AstUnaryExpression*>(_node);
+                symbol_table_.push_scope();
+                if (!check_unary_expression(unary_expr_ptr))
+                {
+                    symbol_table_.pop_scope();
+                    break;
+                }
+                symbol_table_.pop_scope();
+                break;
+            }
+        case AstNodeType::literal_expression:
+            {
+                auto literal_expr_ptr = static_cast<AstLiteralExpression*>(_node);
+
+                if (std::holds_alternative<int>(literal_expr_ptr->value_))
+                {
+                    literal_expr_ptr->resolved_type_ = DataType::int_type;
+
+
+
+                }
+                else if (std::holds_alternative<bool>(literal_expr_ptr->value_))
+                {
+                    literal_expr_ptr->resolved_type_ = DataType::bool_type;
+
+                }
+
+                break;
+            }
+        case AstNodeType::variable_expression:
+            {
+                auto variable_expr_ptr = static_cast<AstVariableExpression*>(_node);
+                const std::string& identifier = variable_expr_ptr->identifier_;
+                const Symbol* symbol = symbol_table_.lookup(identifier);
+                if (!symbol)
+                {
+                    std::string err_msg = fmt::format("unkown identifier {}", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+                auto symbol_type = get_if<VariableSymbol>(&symbol->symbol_signature_);
+                if (!symbol_type)
+                {
+                    std::string err_msg = fmt::format(" identifier \"{}\" must be variable", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+                variable_expr_ptr->resolved_type_ = symbol_type->type_;
+                break;
+            }
+
+        case AstNodeType::function_call:
+            {
+                auto function_call_ptr = static_cast<AstFunctionCall*>(_node);
+                const std::string& identifier = function_call_ptr->identifier_;
+
+                const Symbol* symbol = symbol_table_.lookup(identifier);
+                if (!symbol)
+                {
+                    std::string err_msg = fmt::format("Unknown function '{}'", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                auto func_sym = std::get_if<FunctionSymbol>(&symbol->symbol_signature_);
+                if (!func_sym)
+                {
+                    std::string err_msg = fmt::format("Identifier '{}' is not a function", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                const size_t expected_args = func_sym->param_types_.size();
+                const size_t actual_args = function_call_ptr->arguments_.size();
+                if (actual_args != expected_args)
+                {
+                    std::string err_msg = fmt::format("Function '{}' expects {} arguments, got {}",
+                                                      identifier, expected_args, actual_args);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                for (size_t i = 0; i < actual_args; ++i)
+                {
+                    auto* arg_ptr = function_call_ptr->arguments_[i].get();
+                    check_node(arg_ptr);
+                    if (should_abort_)
+                    {
+                        break;
+                    }
+
+                    if (arg_ptr->resolved_type_ != func_sym->param_types_[i].type_)
+                    {
+                        std::string err_msg = fmt::format(
+                            "Argument {} of function '{}' type mismatch: expected {}, got {}",
+                            i + 1,
+                            identifier,
+                            data_type_to_string_view(func_sym->param_types_[i].type_),
+                            data_type_to_string_view(arg_ptr->resolved_type_));
+                        push_error(arg_ptr, err_msg);
+                    }
+                }
+
+                function_call_ptr->resolved_type_ = func_sym->return_type_;
+                break;
+            }
+        case AstNodeType::function_declaration:
+            {
+                auto function_declaration_ptr = static_cast<AstFunctionDeclaration*>(_node);
+
+                const std::string& identifier = function_declaration_ptr->identifier_;
+                DataType return_type = function_declaration_ptr->return_type_;
+                const auto& params = function_declaration_ptr->parameters_;
+
+                if (return_type == DataType::unresolved_type)
+                {
+                    std::string err_msg = fmt::format("Function '{}' has unresolved return type", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                const Symbol* symbol = symbol_table_.lookup(identifier);
+                if (symbol != nullptr)
+                {
+                    std::string err_msg = fmt::format("Redefinition of identifier '{}'", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                bool has_param_error = false;
+                for (size_t i = 0; i < params.size(); ++i)
+                {
+                    const auto& param = params[i];
+                    if (param.type_ == DataType::void_type || param.type_ == DataType::unresolved_type)
+                    {
+                        std::string err_msg = fmt::format("Parameter '{}' cannot be {}",
+                                                          param.name_,
+                                                          data_type_to_string_view(param.type_));
+                        push_error(_node, err_msg);
+                        has_param_error = true;
+                    }
+
+                    for (size_t j = i + 1; j < params.size(); ++j)
+                    {
+                        if (param.name_ == params[j].name_)
+                        {
+                            std::string err_msg = fmt::format("Duplicate parameter name '{}' in function '{}'",
+                                                              param.name_,
+                                                              identifier);
+                            push_error(_node, err_msg);
+                            has_param_error = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (has_param_error)
+                {
+                    break;
+                }
+
+                symbol_table_.insert_func_symbol(identifier, return_type, params);
+                break;
+            }
+        case AstNodeType::function_definition:
+            {
+                auto function_def_ptr = static_cast<AstFunctionDefinition*>(_node);
+                const std::string& identifier = function_def_ptr->identifier_;
+                DataType return_type = function_def_ptr->return_type_;
+                const auto& params = function_def_ptr->parameters_;
+               if (return_type == DataType::unresolved_type)
+                {
+                    std::string err_msg = fmt::format("Function '{}' has unresolved return type", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                const Symbol* symbol = symbol_table_.lookup(identifier);
+                if (symbol != nullptr)
+                {
+                    std::string err_msg = fmt::format("Redefinition of identifier '{}'", identifier);
+                    push_error(_node, err_msg);
+                    break;
+                }
+
+                bool has_param_error = false;
+                for (size_t i = 0; i < params.size(); ++i)
+                {
+                    const auto& param = params[i];
+                    if (param.type_ == DataType::void_type || param.type_ == DataType::unresolved_type)
+                    {
+                        std::string err_msg = fmt::format("Parameter '{}' cannot be {}",
+                                                          param.name_,
+                                                          data_type_to_string_view(param.type_));
+                        push_error(_node, err_msg);
+                        has_param_error = true;
+                    }
+
+                    for (size_t j = i + 1; j < params.size(); ++j)
+                    {
+                        if (param.name_ == params[j].name_)
+                        {
+                            std::string err_msg = fmt::format("Duplicate parameter name '{}' in function '{}'",
+                                                              param.name_,
+                                                              identifier);
+                            push_error(_node, err_msg);
+                            has_param_error = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (has_param_error)
+                {
+                    break;
+                }
+
+                symbol_table_.insert_func_symbol(identifier, return_type, params);
+                symbol_table_.push_scope();
+                for (const auto& param:params)
+                {
+                    symbol_table_.insert_var_symbol(param.name_,param.type_);
+                }
+                check_node(function_def_ptr->body_.get());
+                symbol_table_.pop_scope();
+                break;
+            }
+        case AstNodeType::undefined:
+        default:
+            {
+                push_error(_node, "Unrecognized or undefined AST node");
+                should_abort_ = true;
+                break;
+            }
+        }
+
+        return !should_abort_;
+    }
+
+
+    bool SemanticChecker::check_unary_expression(AstUnaryExpression* _unary_node)
+    {
+        if (!_unary_node) return false;
+        if (!_unary_node->rhs_) return false;
+        symbol_table_.push_scope();
+        if (!check_node(_unary_node->rhs_.get()))
+        {
+            symbol_table_.pop_scope();
+            return false;
+        }
+        bool had_error = false;
+        DataType rhs_data_type = _unary_node->rhs_->resolved_type_;
+        TokenType operator_name = _unary_node->operator_.type_;
+        switch (operator_name)
+        {
         case TokenType::minus:
-        case TokenType::plus:
-        case TokenType::multiply_op:
-        case TokenType::divide_op:
+            if (rhs_data_type != DataType::int_type)
             {
-                if (_lhs->resolved_type_ == DataType::int_type && _rhs->resolved_type_ == DataType::int_type)
-                {
-                    binary_operation->resolved_type_ = DataType::bool_type;
-                    binary_operation->lhs_ = std::move(_lhs);
-                    binary_operation->rhs_ = std::move(_rhs);
-                    return binary_operation;
-                }
+                std::string err_msg = fmt::format("Expected integer type with unary operation {}",
+                                                  _unary_node->operator_.payload_);
+                push_error(_unary_node, err_msg);
+
+                symbol_table_.pop_scope();
+                return false;
+            }
+            break;
+        case TokenType::negation_op:
+            if (rhs_data_type != DataType::bool_type)
+            {
+                std::string err_msg = fmt::format("Expected boolean type with unary operation {}",
+                                                  _unary_node->operator_.payload_);
+                push_error(_unary_node, err_msg);
+                symbol_table_.pop_scope();
+                return false;
             }
             break;
         default:
-            {
-                //error kurwy, undefined operator
-                return nullptr;
-            }
             break;
         }
+        symbol_table_.pop_scope();
     }
 
 
-    std::unique_ptr<AstExpression> SemanticChecker::function_call(std::string_view _identifier,
-                                                                  std::vector<std::unique_ptr<AstExpression>>
-                                                                  _arguments)
+    bool SemanticChecker::check_binary_expression(AstBinaryExpression* _binary_expression_node)
     {
-        std::string identifier{_identifier};
+        if (!_binary_expression_node) return false;
+        if (!_binary_expression_node->rhs_) return false;
+        if (!_binary_expression_node->lhs_) return false;
 
-        const Symbol* symbol = symbol_table_.lookup(identifier);
+        DataType lhs_data_type = _binary_expression_node->lhs_->resolved_type_;
+        DataType rhs_data_type = _binary_expression_node->rhs_->resolved_type_;
+        const std::string& operator_name = _binary_expression_node->operator_.payload_;
 
-        if (!symbol)
+        switch (_binary_expression_node->operator_.type_)
         {
-            return nullptr;
-        }
-
-        if (!std::holds_alternative<FunctionSymbol>(symbol->symbol_signature_))
-        {
-            return nullptr;
-        }
-        auto& function_signature = std::get<FunctionSymbol>(symbol->symbol_signature_);
-        auto& param_types = function_signature.param_types_;
-        if (param_types.size() != _arguments.size())
-        {
-            return nullptr;
-        }
-        for (int i = 0; i < _arguments.size(); ++i)
-        {
-            if (!_arguments[i] || _arguments[i]->resolved_type_ != param_types[i].type_) //types list missmatch
+        case TokenType::plus:
+        case TokenType::minus:
+        case TokenType::multiply_op:
+        case TokenType::divide_op:
+            if (rhs_data_type != DataType::int_type || lhs_data_type != DataType::int_type)
             {
-                return nullptr;
+                std::string err_msg = fmt::format("Both types must be integer for {} operator", operator_name);
+                push_error(_binary_expression_node, err_msg);
             }
-            //error wrong argument type/mismatch!
+            break;
+        case TokenType::equal_op:
+        case TokenType::not_equal_op:
+        case TokenType::greater_op:
+        case TokenType::smaller_op:
+            if (rhs_data_type != DataType::bool_type || lhs_data_type != DataType::bool_type)
+            {
+                std::string err_msg = fmt::format("Both types must be boolean for {} operator", operator_name);
+                push_error(_binary_expression_node, err_msg);
+            }
+            break;
+        case TokenType::or_op:
+        case TokenType::and_op:
+            if (rhs_data_type != lhs_data_type)
+            {
+                std::string err_msg = fmt::format("Types missmatch, {} can't compare boolean to int", operator_name);
+                push_error(_binary_expression_node, err_msg);
+            }
+            break;
+        default:
+            return false;
+            break;
         }
-        auto ret_node = std::make_unique<AstFunctionCall>();
-        ret_node->resolved_type_ = function_signature.return_type_;
-        ret_node->identifier_ = _identifier;
-        ret_node->arguments_ = std::move(_arguments);
-        return ret_node;
-        //here we call function
-    }
-
-
-    std::unique_ptr<AstInstruction> SemanticChecker::if_instruction(std::unique_ptr<AstExpression> _condition,
-                                                                    std::unique_ptr<AstInstruction> _if_branch,
-                                                                    std::unique_ptr<AstInstruction> _else_branch)
-    {
-        //if(condition){instruction}else {}
-        if (!_condition || _condition->resolved_type_ != DataType::bool_type)
-        {
-            return nullptr;
-        }
-        auto ret_node = std::make_unique<AstIfInstruction>();
-        ret_node->condition_ = std::move(_condition);
-        ret_node->then_ = std::move(_if_branch);
-        ret_node->else_branch_ = std::move(_else_branch);
-        return ret_node;
-    }
-
-
-    std::unique_ptr<AstInstruction> SemanticChecker::while_instruction(std::unique_ptr<AstExpression> _condition,
-                                                                       std::unique_ptr<AstInstruction> _body)
-    {
-        if (!_condition || _condition->resolved_type_ != DataType::bool_type)
-        {
-            return nullptr;
-        }
-        auto ret_node = std::make_unique<AstWhileInstruction>();
-        ret_node->condition_ = std::move(_condition);
-        ret_node->body_ = std::move(_body);
-        return ret_node;
-    }
-
-
-    std::unique_ptr<AstInstruction> SemanticChecker::assign_instruction(
-        Token _operator, std::string_view _identifier,
-        std::unique_ptr<AstExpression> _rhs)
-    {
-        if (_operator.type_ != TokenType::assign || !_rhs)
-        {
-            return nullptr;
-        }
-
-        const Symbol* symbol = symbol_table_.lookup(std::string(_identifier));
-        if (!symbol || !std::holds_alternative<VariableSymbol>(symbol->symbol_signature_))
-        {
-            return nullptr;
-        }
-
-        const auto& lhs_signature = std::get<VariableSymbol>(symbol->symbol_signature_);
-        if (lhs_signature.type_ != _rhs->resolved_type_)
-        {
-            return nullptr;
-        }
-
-        auto ret_node = std::make_unique<AstAssignInstruction>();
-        ret_node->identifier_ = _identifier;
-        ret_node->rhs_ = std::move(_rhs);
-        return ret_node;
-    }
-
-
-    std::unique_ptr<AstInstruction> SemanticChecker::variable_declaration(DataType _type, std::string_view _identifier,
-                                                                          std::unique_ptr<AstExpression> _init_value)
-    {
-        if (_type == DataType::void_type)
-        {
-            //TODO: error msg
-            //var can't be null
-            return nullptr;
-        }
-        const Symbol* symbol = symbol_table_.lookup(std::string(_identifier));
-        if (!symbol)
-        {
-            //TODO: error msg
-            //name already exists in this scope
-            return nullptr;
-        }
-        if (!symbol_table_.insert_var_symbol(_identifier, _type))
-        {
-            //TODO: error msg
-            return nullptr;
-        }
-        std::unique_ptr<AstVariableDeclaration> ret_node = std::make_unique<AstVariableDeclaration>();
-        ret_node->identifier_ = _identifier;
-        ret_node->type_ = _type;
-        ret_node->init_value_ = std::move(_init_value);
-        return ret_node;
-    }
-
-
-    std::unique_ptr<AstInstruction> SemanticChecker::block_instruction(
-        std::vector<std::unique_ptr<AstInstruction>> _instructions)
-    {
-        auto instructions = std::make_unique<AstBlockInstruction>();
-        instructions->body_ = std::move(_instructions);
-        return instructions;
-    }
-
-
-    std::unique_ptr<AstFunction> SemanticChecker::function_declaration(DataType _return_type,
-                                                                       std::string_view _identifier,
-                                                                       std::vector<VariableSymbol> _params)
-    {
-        if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
-        {
-            return nullptr;
-        }
-        symbol_table_.push_scope();
-        for (const auto& param : _params)
-        {
-            symbol_table_.insert_var_symbol(param.name_, param.type_);
-        }
-        symbol_table_.pop_scope();
-        auto ret_node = std::make_unique<AstFunctionDeclaration>();
-        ret_node->identifier_ = std::string{_identifier};
-        ret_node->return_type_ = _return_type;
-        ret_node->parameters_ = std::move(_params);
-        return ret_node;
-    }
-
-
-    std::unique_ptr<AstFunction> SemanticChecker::function_definition(DataType _return_type,
-                                                                      std::string_view _identifier,
-                                                                      std::vector<VariableSymbol> _params,
-                                                                      std::unique_ptr<AstBlockInstruction> _body)
-    {
-        if (!symbol_table_.insert_func_symbol(std::string{_identifier}, _return_type, _params))
-        {
-            return nullptr;
-        }
-        symbol_table_.push_scope();
-        for (const auto& param : _params)
-        {
-            symbol_table_.insert_var_symbol(param.name_, param.type_);
-        }
-        symbol_table_.pop_scope();
-        auto ret_node = std::make_unique<AstFunctionDefinition>();
-        ret_node->identifier_ = std::string{_identifier};
-        ret_node->return_type_ = _return_type;
-        ret_node->parameters_ = std::move(_params);
-        ret_node->body_ = std::move(_body);
-        return ret_node;
     }
 }

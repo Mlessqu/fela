@@ -34,6 +34,8 @@ enum class AstNodeType
     struct AstBase
     {
         AstNodeType node_type_ = AstNodeType::undefined;
+        unsigned int line_=0;
+        unsigned int column_=0;
         explicit AstBase(AstNodeType _type = AstNodeType::undefined) : node_type_{_type} {}
         virtual ~AstBase() = default;
     };

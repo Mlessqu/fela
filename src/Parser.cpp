@@ -133,6 +133,8 @@ namespace fela
         }
         expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
         auto return_node = std::make_unique<AstReturnInstruction>();
+        return_node->line_ = ret_keyword.line_;
+        return_node->column_ = ret_keyword.column_;
         return_node->expression_ = std::move(return_value);
         return return_node;
     }
@@ -140,12 +142,14 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_while_instruction()
     {
-        consume_token(); //while while(condition) { instructions}
+        auto while_token = consume_token(); //while while(condition) { instructions}
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after while");
         auto while_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
         auto while_body = parse_instruction();
         auto node_instruction = std::make_unique<AstWhileInstruction>();
+        node_instruction->line_ = while_token.line_;
+        node_instruction->column_ = while_token.column_;
         node_instruction->body_ = std::move(while_body);
         node_instruction->condition_ = std::move(while_condition);
         return node_instruction;
@@ -154,7 +158,7 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_if_instruction()
     {
-        consume_token();
+        auto if_token = consume_token();
         expect_and_consume(TokenType::open_group, "Invalid syntax, expected '(' after if");
         auto if_condition = parse_expression();
         expect_and_consume(TokenType::close_group, expected_diff_symbol_error(")"));
@@ -166,6 +170,8 @@ namespace fela
             optional_else = parse_instruction();
         }
         auto return_node = std::make_unique<AstIfInstruction>();
+        return_node->line_ = if_token.line_;
+        return_node->column_ = if_token.column_;
         return_node->condition_ = std::move(if_condition);
         return_node->then_ = std::move(then_body);
         return_node->else_branch_ = std::move(optional_else);
@@ -178,6 +184,8 @@ namespace fela
         auto declare_var_node = std::make_unique<AstVariableDeclaration>();
 
         auto token_type = consume_token(); //type keyword
+        declare_var_node->line_ = token_type.line_;
+        declare_var_node->column_ = token_type.column_;
 
         if (token_type.payload_ == "bool")
         {
@@ -211,7 +219,9 @@ namespace fela
     {
         auto ret_node = std::make_unique<AstBlockInstruction>();
 
-        consume_token();
+        auto open_scope = consume_token();
+        ret_node->line_ = open_scope.line_;
+        ret_node->column_ = open_scope.column_;
         while (is_not_type(TokenType::close_scope) && is_not_type(TokenType::eof))
         {
             ret_node->body_.push_back(std::move(parse_instruction()));
@@ -232,6 +242,8 @@ namespace fela
             return nullptr;
         }
         auto return_node = std::make_unique<AstAssignInstruction>();
+        return_node->line_ = id_token.line_;
+        return_node->column_ = id_token.column_;
         return_node->identifier_ = id_token.payload_;
         return_node->rhs_ = std::move(value);
         return return_node;
@@ -240,12 +252,18 @@ namespace fela
 
     std::unique_ptr<AstInstruction> Parser::parse_primary_instruction()
     {
-        auto ret_node = std::make_unique<AstPrimaryInstruction>();
-        ret_node->expression_ = parse_expression();
+        auto expr = parse_expression();
         if (!expect_and_consume(TokenType::semi, expected_diff_symbol_error(";")))
         {
             return nullptr;
         }
+        auto ret_node = std::make_unique<AstPrimaryInstruction>();
+        if (expr)
+        {
+            ret_node->line_ = expr->line_;
+            ret_node->column_ = expr->column_;
+        }
+        ret_node->expression_ = std::move(expr);
         return ret_node;
     }
 
@@ -296,6 +314,8 @@ namespace fela
             {
                 Token id_token = consume_token(); // identifier
                 auto ret_node = std::make_unique<AstVariableExpression>();
+                ret_node->line_ = id_token.line_;
+                ret_node->column_ = id_token.column_;
                 ret_node->identifier_ = id_token.payload_;
                 return ret_node;
             }
@@ -318,6 +338,8 @@ namespace fela
         //literals we have right boolean and integer
         auto literal_expression = std::make_unique<AstLiteralExpression>();
         Token literal = consume_token();
+        literal_expression->line_ = literal.line_;
+        literal_expression->column_ = literal.column_;
         if (literal.type_ == TokenType::integer_literal)
         {
             int integer = std::stoi(std::string(literal.payload_));
@@ -347,6 +369,8 @@ namespace fela
         {
             auto ret_node = std::make_unique<AstUnaryExpression>();
             Token token = consume_token();
+            ret_node->line_ = token.line_;
+            ret_node->column_ = token.column_;
             ret_node->operator_ = token;
             ret_node->rhs_ = parse_unary_expression();
 
@@ -365,6 +389,8 @@ namespace fela
             auto rhs = parse_unary_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->rhs_ = std::move(rhs);
             ret_node->lhs_ = std::move(lhs);
@@ -381,6 +407,8 @@ namespace fela
             auto rhs = parse_multiplying_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
@@ -399,6 +427,8 @@ namespace fela
             auto rhs = parse_additive_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
@@ -417,6 +447,8 @@ namespace fela
             auto rhs = parse_relational_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
@@ -435,6 +467,8 @@ namespace fela
             auto rhs = parse_equality_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
@@ -453,6 +487,8 @@ namespace fela
             auto rhs = parse_boolean_logic_and_expression();
 
             auto ret_node = std::make_unique<AstBinaryExpression>();
+            ret_node->line_ = operator_token.line_;
+            ret_node->column_ = operator_token.column_;
             ret_node->operator_ = operator_token;
             ret_node->lhs_ = std::move(lhs);
             ret_node->rhs_ = std::move(rhs);
@@ -527,6 +563,8 @@ namespace fela
         if (is_type(TokenType::open_scope))
         {
             auto function_def = std::make_unique<AstFunctionDefinition>();
+            function_def->line_ = return_type.line_;
+            function_def->column_ = return_type.column_;
             function_def->identifier_ = function_name;
             function_def->return_type_ = token_type_to_data_type(return_type.type_);
             function_def->parameters_ = std::move(params);
@@ -538,6 +576,8 @@ namespace fela
         {
             expect_and_consume(TokenType::semi, expected_diff_symbol_error(";"));
             auto function_decl = std::make_unique<AstFunctionDeclaration>();
+            function_decl->line_ = return_type.line_;
+            function_decl->column_ = return_type.column_;
             function_decl->identifier_ = function_name;
             function_decl->return_type_ = token_type_to_data_type(return_type.type_);
             function_decl->parameters_ = std::move(params);
@@ -584,6 +624,8 @@ namespace fela
         std::string identifier{id_token.payload_};
         auto args = parse_argument_list();
         auto ret_node = std::make_unique<AstFunctionCall>();
+        ret_node->line_ = id_token.line_;
+        ret_node->column_ = id_token.column_;
         ret_node->identifier_ = identifier;
         ret_node->arguments_ = std::move(args);
         return ret_node;
