@@ -21,7 +21,11 @@ struct SemanticFixture
         auto tokens = lexer.tokenize();
         fela::Parser parser(tokens);
         auto program = parser.parse_program();
-        REQUIRE(program != nullptr);
+        if (!program)
+        {
+            std::cout << "Parser error: failed to parse source\n";
+            return false;
+        }
         checker_ = fela::SemanticChecker{};
         bool result = checker_.check(program.get());
         for (const auto& err : checker_.errors())

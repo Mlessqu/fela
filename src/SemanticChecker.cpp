@@ -240,6 +240,7 @@ namespace fela
                     check_node(instruction.get());
                 }
                 symbol_table_.pop_scope();
+                break;
             }
         case AstNodeType::binary_expression:
             {
