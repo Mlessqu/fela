@@ -141,7 +141,7 @@ namespace fela
     std::unique_ptr<AstInstruction> Parser::parse_return_instruction()
     {
         auto ret_keyword = consume_token();
-        auto return_value = std::make_unique<AstExpression>();
+        std::unique_ptr<AstExpression> return_value=nullptr;
         if (is_not_type(TokenType::semi))
         {
             return_value = parse_expression();

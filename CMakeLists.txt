@@ -3,6 +3,7 @@ project(fela)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(LLVM REQUIRED)
 add_executable(fela
         src/main.cpp
         src/Lexer.cpp
@@ -17,6 +18,8 @@ add_executable(fela
         src/SemanticChecker.h++
         src/AstWalk.cpp
         src/AstWalk.h++
+        src/CodeGen.cpp
+        src/CodeGen.h++
 )
 
 add_executable(fela_tests
