@@ -42,7 +42,7 @@ namespace fela
         case DataType::int_type: return "int";
         case DataType::bool_type: return "bool";
         case DataType::void_type: return "void";
-        case DataType::unresolved_type: return "undefined";
+        case DataType::unresolved_type: return "unresolved_type";
         }
         return "unknown type, consider updating converter function in symbol table.h";
     }
