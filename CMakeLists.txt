@@ -3,7 +3,14 @@ project(fela)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-find_package(LLVM REQUIRED)
+
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_INCLUDE_DIRS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+
+llvm_map_components_to_libnames(llvm_libs core support)
+
 add_executable(fela
         src/main.cpp
         src/Lexer.cpp
@@ -21,6 +28,7 @@ add_executable(fela
         src/CodeGen.cpp
         src/CodeGen.h++
 )
+target_link_libraries(fela PRIVATE LLVM)
 
 add_executable(fela_tests
         tests/test_lexer.cpp
