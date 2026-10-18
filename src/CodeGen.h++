@@ -16,6 +16,7 @@
 
     namespace fela
     {
+
         class CodeGen
         {
         public:
@@ -29,11 +30,15 @@
             bool generate_node(AstBase* _node);
             llvm::Function* codegen_function(AstFunctionDefinition* _func);
             llvm::Value* codegen_expression(AstExpression* _expression);
-            void codegen_instruction(AstInstruction* _instruction);
+            bool codegen_instruction(AstInstruction* _instruction);
         private:
+            void new_scope();
+            void close_scope();
+            llvm::AllocaInst* lookup_var(std::string _identifier);
             llvm::Type* to_llvm_type(DataType _type);
             std::unique_ptr<llvm::LLVMContext> context_;
             std::unique_ptr<llvm::Module> module_;
             llvm::IRBuilder<> builder_;
+            std::vector<std::unordered_map<std::string, llvm::AllocaInst*>> scopes_;
         };
     } // fela
