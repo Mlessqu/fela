@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "AstWalk.h++"
+#include "CodeGen.h++"
 #include "Lexer.h++"
 #include "Parser.h++"
 #include "SemanticChecker.h++"
@@ -117,6 +118,13 @@ int main(int _argc, char** _argv)
     {
         std::cout << "Semantic passed\n";
     }
-
+    fela::CodeGen ir_representation;
+    ir_representation.generate_node(program.get());
+    if (!ir_representation.save_ir_to_file("mleko.ll"))
+    {
+        std::cout << "Error saving to file";
+        return EXIT_CODE_FAILURE;
+    }
+    std::cout << "Generated ir file";
     return EXIT_CODE_SUCCESS;
 }

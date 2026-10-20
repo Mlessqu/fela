@@ -1,5 +1,5 @@
 #include "CodeGen.h++"
-
+#include <llvm/Support/FileSystem.h>
 namespace fela
 {
     //implementation details here
@@ -17,16 +17,19 @@ namespace fela
         case AstNodeType::return_instruction:
         case AstNodeType::assign_instruction:
         case AstNodeType::while_instruction:
+        case AstNodeType::variable_declaration:
             return codegen_instruction(static_cast<AstInstruction*>(_node));
 
         case AstNodeType::binary_expression:
         case AstNodeType::literal_expression:
         case AstNodeType::unary_expression:
         case AstNodeType::variable_expression:
+        case AstNodeType::function_call:
             return codegen_expression(static_cast<AstExpression*>(_node)) != nullptr;
 
         case AstNodeType::function_definition:
             return codegen_function(static_cast<AstFunctionDefinition*>(_node)) != nullptr;
+        case AstNodeType::function_declaration:
 
         case AstNodeType::program:
             for (const auto& node : static_cast<AstProgram*>(_node)->nodes_)
@@ -34,12 +37,21 @@ namespace fela
                 generate_node(node.get());
             }
             return true;
+        case AstNodeType::undefined:
+            default:
+            {
+                return false;
+            }
         }
+        return false;
     }
 
 
-    llvm::Function* CodeGen::codegen_function(AstFunctionDefinition* _func)
+
+    llvm::Function* CodeGen::codegen_function_declaration(AstFunctionDeclaration* _func)
     {
+         llvm::Function* func = module_->getFunction(_func->identifier_);
+        if (func) return nullptr; //redeclaration!
         llvm::Type* ret_type = to_llvm_type(_func->return_type_);
         std::vector<llvm::Type*> param_types;
         for (const auto& param : _func->parameters_)
@@ -50,20 +62,51 @@ namespace fela
         }
         llvm::FunctionType* func_type = llvm::FunctionType::get(ret_type, param_types, false);
 
-        llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, _func->identifier_,
+       func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, _func->identifier_,
+                                                      module_.get());
+        return func;
+    }
+
+
+    llvm::Function* CodeGen::codegen_function_definition(AstFunctionDefinition* _func)
+    {
+        llvm::Function* func = module_->getFunction(_func->identifier_);
+        if (func) return nullptr;
+        llvm::Type* ret_type = to_llvm_type(_func->return_type_);
+        std::vector<llvm::Type*> param_types;
+        for (const auto& param : _func->parameters_)
+        {
+            auto type = to_llvm_type(param.type_);
+            if (!type) return nullptr;
+            param_types.push_back(type);
+        }
+        llvm::FunctionType* func_type = llvm::FunctionType::get(ret_type, param_types, false);
+
+         func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, _func->identifier_,
                                                       module_.get());
 
         llvm::BasicBlock* entry_block = llvm::BasicBlock::Create(*context_, "entry", func);
         builder_.SetInsertPoint(entry_block);
         new_scope();
-        for (const auto& param : _func->parameters_)
+        for (int i =0 ;i <_func->parameters_.size();i++)
         {
+            const auto& param = _func->parameters_[i];
             llvm::AllocaInst* alloca_param = builder_.CreateAlloca(to_llvm_type(param.type_), nullptr, param.name_);
             scopes_.back()[param.name_] = alloca_param;
+            builder_.CreateStore(func->getArg(i),alloca_param);
         }
         bool instruct_result = codegen_instruction(_func->body_.get());
+        if (!builder_.GetInsertBlock()->hasTerminator())
+        {
+            if (_func->return_type_ == DataType::void_type)
+            {
+                builder_.CreateRetVoid();
+            }
+        }
         close_scope();
-       if (!instruct_result) return nullptr;
+
+        if (!instruct_result) return nullptr;
+        return func;
     }
 
 
@@ -111,7 +154,6 @@ namespace fela
 
     llvm::Value* CodeGen::codegen_expression(AstExpression* _expression)
     {
-        //generate type
         switch (_expression->node_type_)
         {
         case AstNodeType::binary_expression:
@@ -216,7 +258,21 @@ namespace fela
                 if (!look_up) return nullptr;
                 return builder_.CreateLoad(look_up->getAllocatedType(), look_up, var_expr->identifier_);
             }
+        case AstNodeType::function_call:
+            {
+                const auto& func_call = static_cast<AstFunctionCall*>(_expression);
 
+                llvm::Function* function = module_->getFunction(func_call->identifier_);
+                if (!function) return nullptr;
+                std::vector<llvm::Value*> llvm_args;
+                for (const auto& arg : func_call->arguments_)
+                {
+                    llvm::Value* arg_val = codegen_expression(arg.get());
+                    if (!arg_val) return nullptr;
+                    llvm_args.push_back(arg_val);
+                }
+                return builder_.CreateCall(function, llvm_args);
+            }
         default:
             return nullptr;
         }
@@ -286,21 +342,30 @@ namespace fela
                 llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*context_, "else_block", current_func);
                 llvm::BasicBlock* tail = llvm::BasicBlock::Create(*context_, "tail", current_func);
 
+                builder_.CreateBr(if_condition);
                 builder_.SetInsertPoint(if_condition);
-                llvm::Value* if_conditional = codegen_expression(if_instr->condition_.get());
-                builder_.CreateCondBr(if_conditional,then,else_block);
+                llvm::Value* if_condition_result = codegen_expression(if_instr->condition_.get());
+                builder_.CreateCondBr(if_condition_result, then, else_block);
 
                 builder_.SetInsertPoint(then);
                 new_scope();
                 codegen_instruction(if_instr->then_.get());
                 close_scope();
-                builder_.CreateBr(tail);
+                if (!builder_.GetInsertBlock()->hasTerminator())
+                {
+                    builder_.CreateBr(tail);
+                }
+
 
                 builder_.SetInsertPoint(else_block);
                 new_scope();
                 codegen_instruction(if_instr->else_branch_.get());
                 close_scope();
-                builder_.CreateBr(tail);
+                if (!builder_.GetInsertBlock()->hasTerminator())
+                {
+                    builder_.CreateBr(tail);
+                }
+
 
                 builder_.SetInsertPoint(tail);
 
@@ -314,15 +379,17 @@ namespace fela
                 llvm::BasicBlock* loop = llvm::BasicBlock::Create(*context_, "loop", current_func);
                 llvm::BasicBlock* end = llvm::BasicBlock::Create(*context_, "end", current_func);
 
-
+                builder_.CreateBr(loop_condition);
                 builder_.SetInsertPoint(loop_condition);
                 llvm::Value* loop_conditional = codegen_expression(while_instr->condition_.get());
+
+
                 builder_.CreateCondBr(loop_conditional, loop, end);
                 builder_.SetInsertPoint(loop);
                 new_scope();
                 bool result = codegen_instruction(while_instr->body_.get());
                 close_scope();
-                if (!builder_.GetInsertBlock()->getTerminator())
+                if (!builder_.GetInsertBlock()->hasTerminator())
                 {
                     builder_.CreateBr(loop_condition);
                 }
@@ -342,8 +409,25 @@ namespace fela
                 builder_.CreateRet(value);
                 return true;
             }
+
         default:
             return false;
         }
+    }
+
+
+    bool CodeGen::save_ir_to_file(std::string_view _filename)
+    {
+        std::error_code error_code;
+        llvm::raw_fd_ostream target_file(_filename,error_code,llvm::sys::fs::OF_None);
+        if (error_code) return false;
+        module_->print(target_file,nullptr);
+        return true;
+    }
+
+
+    void CodeGen::print_ir()
+    {
+        module_->print(llvm::outs(),nullptr);
     }
 } // fela
