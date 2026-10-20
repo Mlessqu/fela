@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "AstWalk.h++"
+#include "Backend.h++"
 #include "CodeGen.h++"
 #include "Lexer.h++"
 #include "Parser.h++"
@@ -126,5 +127,6 @@ int main(int _argc, char** _argv)
         return EXIT_CODE_FAILURE;
     }
     std::cout << "Generated ir file";
+    fela::backend::emit_object_file(ir_representation.get_module(),"./");
     return EXIT_CODE_SUCCESS;
 }

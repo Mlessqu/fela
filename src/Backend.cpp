@@ -26,22 +26,13 @@ namespace fela::backend
 */
     namespace
     {
-        const llvm::Target* prepare_target(std::string& _err)
-        {
-            llvm::InitializeNativeTarget();
-            llvm::InitializeNativeTargetAsmParser();
-            llvm::InitializeAllAsmPrinters();
-            std::string the_famous_triple_string = llvm::sys::getDefaultTargetTriple();
-            llvm::Triple triple(the_famous_triple_string);
-            const llvm::Target* target = llvm::TargetRegistry::lookupTarget(triple,_err);
-            return target;
-        }
+
     }
     bool emit_object_file(llvm::Module* _module, std::string_view _obj_path)
     {
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmParser();
-        llvm::InitializeAllAsmPrinters();
+        llvm::InitializeNativeTargetAsmPrinter();
         std::string the_famous_triple_string = llvm::sys::getDefaultTargetTriple();
         llvm::Triple triple(the_famous_triple_string);
         _module->setTargetTriple(triple);
