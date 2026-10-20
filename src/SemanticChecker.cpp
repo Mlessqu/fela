@@ -532,8 +532,8 @@ namespace fela
         }
         bool had_error = false;
         DataType rhs_data_type = _unary_node->rhs_->resolved_type_;
-        TokenType operator_name = _unary_node->operator_.type_;
-        switch (operator_name)
+
+        switch ( _unary_node->operator_.type_)
         {
         case TokenType::minus:
             if (rhs_data_type != DataType::int_type)
@@ -545,7 +545,9 @@ namespace fela
                 symbol_table_.pop_scope();
                 return false;
             }
-            break;
+            _unary_node->resolved_type_ = DataType::int_type;
+            symbol_table_.pop_scope();
+            return true;
         case TokenType::negation_op:
             if (rhs_data_type != DataType::bool_type)
             {
@@ -555,11 +557,14 @@ namespace fela
                 symbol_table_.pop_scope();
                 return false;
             }
-            break;
+            _unary_node->resolved_type_ = DataType::bool_type;
+            symbol_table_.pop_scope();
+            return true;
         default:
             break;
         }
         symbol_table_.pop_scope();
+        return false;
     }
 
 
