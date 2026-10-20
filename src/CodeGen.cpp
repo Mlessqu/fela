@@ -284,20 +284,25 @@ namespace fela
                 llvm::BasicBlock* if_condition = llvm::BasicBlock::Create(*context_, "if_condition", current_func);
                 llvm::BasicBlock* then = llvm::BasicBlock::Create(*context_, "then", current_func);
                 llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*context_, "else_block", current_func);
+                llvm::BasicBlock* tail = llvm::BasicBlock::Create(*context_, "tail", current_func);
 
                 builder_.SetInsertPoint(if_condition);
                 llvm::Value* if_conditional = codegen_expression(if_instr->condition_.get());
-                builder_.CreateCondBr(if_condition,then,else_block);
+                builder_.CreateCondBr(if_conditional,then,else_block);
 
                 builder_.SetInsertPoint(then);
                 new_scope();
                 codegen_instruction(if_instr->then_.get());
                 close_scope();
+                builder_.CreateBr(tail);
 
                 builder_.SetInsertPoint(else_block);
                 new_scope();
                 codegen_instruction(if_instr->else_branch_.get());
                 close_scope();
+                builder_.CreateBr(tail);
+
+                builder_.SetInsertPoint(tail);
 
                 return true;
             }
