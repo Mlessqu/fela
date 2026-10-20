@@ -19,11 +19,14 @@ constexpr std::string_view CLI_FLAG_PATH_SHORT = "-p";
 constexpr std::string_view CLI_FLAG_PATH_LONG = "--path";
 constexpr std::string_view CLI_FLAG_AST_DUMP_SHORT = "-d";
 constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
+constexpr std::string_view CLI_FLAG_OUTPUT = "--out";
+constexpr std::string_view CLI_FLAG_OUTPUT_SHORT = "-o";
 
 struct CliOptions
 {
-    std::string_view file_path{};
-    bool dump_ast{false};
+    std::string_view file_path_{};
+    bool dump_ast_{false};
+    std::string_view output_file_{"a.out"};
 };
 
 void print_usage(std::string_view _program_name)
@@ -31,6 +34,7 @@ void print_usage(std::string_view _program_name)
     std::cerr << "Usage: " << _program_name << " [options]\n"
               << "Options:\n"
               << "  " << CLI_FLAG_PATH_SHORT << ", " << CLI_FLAG_PATH_LONG << " <file>    Source file path\n"
+              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <file>   Output file path (default: a.out)\n"
               << "      " << CLI_FLAG_AST_DUMP << "       Print AST after parsing\n";
 }
 
@@ -49,11 +53,20 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
                 std::cerr << "Error: " << arg << " requires argument\n";
                 return std::nullopt;
             }
-            options.file_path = _argv[i];
+            options.file_path_ = _argv[i];
         }
         else if (arg == CLI_FLAG_AST_DUMP|| arg == CLI_FLAG_AST_DUMP_SHORT)
         {
-            options.dump_ast = true;
+            options.dump_ast_ = true;
+        }
+        else if (arg == CLI_FLAG_OUTPUT || arg == CLI_FLAG_OUTPUT_SHORT)
+        {
+            if (++i >= _argc)
+            {
+                std::cerr << "Error: " << arg << " requires argument\n";
+                return std::nullopt;
+            }
+            options.output_file_ = _argv[i];
         }
         else
         {
@@ -62,7 +75,7 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
         }
     }
 
-    if (options.file_path.empty())
+    if (options.file_path_.empty())
     {
         std::cerr << "Error: input file path required\n";
         return std::nullopt;
@@ -81,9 +94,9 @@ int main(int _argc, char** _argv)
     }
 
     fela::Lexer lexer;
-    if (!lexer.load_from_file(std::string(cli->file_path)))
+    if (!lexer.load_from_file(std::string(cli->file_path_)))
     {
-        std::cerr << "Failed to open file: " << cli->file_path << "\n";
+        std::cerr << "Failed to open file: " << cli->file_path_ << "\n";
         return EXIT_CODE_FAILURE;
     }
 
@@ -102,7 +115,7 @@ int main(int _argc, char** _argv)
         return EXIT_CODE_FAILURE;
     }
 
-    if (cli->dump_ast)
+    if (cli->dump_ast_)
     {
         std::cout << fela::ast_dump_node(program.get());
     }
