@@ -44,7 +44,9 @@ namespace fela
         std::vector<llvm::Type*> param_types;
         for (const auto& param : _func->parameters_)
         {
-            param_types.push_back(to_llvm_type(param.type_));
+            auto type = to_llvm_type(param.type_);
+            if (!type) return nullptr;
+            param_types.push_back(type);
         }
         llvm::FunctionType* func_type = llvm::FunctionType::get(ret_type, param_types, false);
 
@@ -53,6 +55,15 @@ namespace fela
 
         llvm::BasicBlock* entry_block = llvm::BasicBlock::Create(*context_, "entry", func);
         builder_.SetInsertPoint(entry_block);
+        new_scope();
+        for (const auto& param : _func->parameters_)
+        {
+            llvm::AllocaInst* alloca_param = builder_.CreateAlloca(to_llvm_type(param.type_), nullptr, param.name_);
+            scopes_.back()[param.name_] = alloca_param;
+        }
+        bool instruct_result = codegen_instruction(_func->body_.get());
+        close_scope();
+       if (!instruct_result) return nullptr;
     }
 
 
@@ -242,7 +253,6 @@ namespace fela
                     builder_.CreateStore(value, var_name_alloca);
                 }
                 return true;
-
             }
         case AstNodeType::assign_instruction:
             {
@@ -270,27 +280,46 @@ namespace fela
         case AstNodeType::if_instruction:
             {
                 const auto& if_instr = static_cast<AstIfInstruction*>(_instruction);
+                llvm::Function* current_func = builder_.GetInsertBlock()->getParent();
+                llvm::BasicBlock* if_condition = llvm::BasicBlock::Create(*context_, "if_condition", current_func);
+                llvm::BasicBlock* then = llvm::BasicBlock::Create(*context_, "then", current_func);
+                llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*context_, "else_block", current_func);
+
+                builder_.SetInsertPoint(if_condition);
+                llvm::Value* if_conditional = codegen_expression(if_instr->condition_.get());
+                builder_.CreateCondBr(if_condition,then,else_block);
+
+                builder_.SetInsertPoint(then);
+                new_scope();
+                codegen_instruction(if_instr->then_.get());
+                close_scope();
+
+                builder_.SetInsertPoint(else_block);
+                new_scope();
+                codegen_instruction(if_instr->else_branch_.get());
+                close_scope();
+
                 return true;
             }
         case AstNodeType::while_instruction:
             {
                 const auto& while_instr = static_cast<AstWhileInstruction*>(_instruction);
                 llvm::Function* current_func = builder_.GetInsertBlock()->getParent();
-                llvm::BasicBlock* loop_condition = llvm::BasicBlock::Create(*context_, "loop_start",current_func);
-                llvm::BasicBlock* loop = llvm::BasicBlock::Create(*context_, "loop",current_func);
-                llvm::BasicBlock* end = llvm::BasicBlock::Create(*context_, "end",current_func);
+                llvm::BasicBlock* loop_condition = llvm::BasicBlock::Create(*context_, "loop_start", current_func);
+                llvm::BasicBlock* loop = llvm::BasicBlock::Create(*context_, "loop", current_func);
+                llvm::BasicBlock* end = llvm::BasicBlock::Create(*context_, "end", current_func);
 
 
                 builder_.SetInsertPoint(loop_condition);
                 llvm::Value* loop_conditional = codegen_expression(while_instr->condition_.get());
-                builder_.CreateCondBr(loop_conditional,loop,end);
+                builder_.CreateCondBr(loop_conditional, loop, end);
                 builder_.SetInsertPoint(loop);
                 new_scope();
                 bool result = codegen_instruction(while_instr->body_.get());
                 close_scope();
                 if (!builder_.GetInsertBlock()->getTerminator())
                 {
-                builder_.CreateBr(loop_condition);
+                    builder_.CreateBr(loop_condition);
                 }
                 builder_.SetInsertPoint(end);
                 return result;
