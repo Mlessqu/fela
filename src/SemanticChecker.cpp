@@ -573,14 +573,10 @@ namespace fela
         if (!_binary_expression_node) return false;
         if (!_binary_expression_node->rhs_) return false;
         if (!_binary_expression_node->lhs_) return false;
-        if (!check_node(_binary_expression_node->rhs_.get()))
-        {
-            return false;
-        }
-        if (!check_node(_binary_expression_node->lhs_.get()))
-        {
-            return false;
-        }
+        if (!check_node(_binary_expression_node->rhs_.get())) return false;
+        if (!check_node(_binary_expression_node->lhs_.get())) return false;
+
+
         DataType lhs_data_type = _binary_expression_node->lhs_->resolved_type_;
         DataType rhs_data_type = _binary_expression_node->rhs_->resolved_type_;
         const std::string& operator_name = _binary_expression_node->operator_.payload_;
@@ -612,9 +608,9 @@ namespace fela
             return true;
         case TokenType::equal_op:
         case TokenType::not_equal_op:
-            if (rhs_data_type != DataType::bool_type || lhs_data_type != DataType::bool_type)
+            if (rhs_data_type != lhs_data_type)
             {
-                std::string err_msg = fmt::format("Both types must be boolean for {} operator", operator_name);
+                std::string err_msg = fmt::format("Types missmatch, {} can't compare boolean to int", operator_name);
                 push_error(_binary_expression_node, err_msg);
                 return false;
             }
@@ -622,9 +618,9 @@ namespace fela
             return true;
         case TokenType::or_op:
         case TokenType::and_op:
-            if (rhs_data_type != lhs_data_type)
+            if (rhs_data_type != DataType::bool_type || lhs_data_type != DataType::bool_type)
             {
-                std::string err_msg = fmt::format("Types missmatch, {} can't compare boolean to int", operator_name);
+                std::string err_msg = fmt::format("Both types must be boolean for {} operator", operator_name);
                 push_error(_binary_expression_node, err_msg);
                 return false;
             }
