@@ -340,9 +340,15 @@ namespace fela
         case AstNodeType::assign_instruction:
             {
                 const auto& assign_instr = static_cast<AstAssignInstruction*>(_instruction);
-                auto lhs = lookup_var(assign_instr->identifier_);
+                llvm::Value* lhs = lookup_var(assign_instr->identifier_);
+                if (!lhs)
+                {
+                    lhs = module_->getNamedGlobal(assign_instr->identifier_);
+                }
                 if (!lhs) return false;
                 llvm::Value* value = codegen_expression(assign_instr->rhs_.get());
+                if (!value) return false;
+
                 builder_.CreateStore(value, lhs);
                 return true;
             }
