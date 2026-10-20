@@ -8,7 +8,7 @@
 #include<llvm/Target/TargetMachine.h>
 #include<llvm/IR/LegacyPassManager.h>
 #include<llvm/Support/FileSystem.h>
-namespace fela::module
+namespace fela::backend
 {
     /* TODO:
     * 1. Wake up LLVM's native x86 backend:
@@ -36,6 +36,8 @@ namespace fela::module
     bool emit_object_file(llvm::Module* _module, std::string_view _obj_path)
     {
         llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmParser();
+        std::string the_famous_triple_string = llvm::sys::getDefaultTargetTriple();
     }
 
 
