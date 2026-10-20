@@ -1,4 +1,12 @@
 #include "CodeGen.h++"
+
+
+ llvm::Module* fela::CodeGen::get_module() const
+{
+    return module_.get();
+}
+
+
 #include <llvm/Support/FileSystem.h>
 namespace fela
 {

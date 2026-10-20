@@ -1,9 +1,7 @@
 #pragma once
 #include<llvm/Target/TargetMachine.h>
-namespace fela
+namespace fela::module
 {
-    class Backend
-    {
-        llvm::TargetMachine
-    };
+    bool emit_object_file(llvm::Module* _module,std::string_view _obj_path);
+    bool link_library(std::string_view _obj_path, std::string_view _binary_path);
 } // fela

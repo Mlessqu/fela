@@ -29,11 +29,12 @@
             void print_ir();
             bool save_ir_to_file(std::string_view _filename);
             bool generate_node(AstBase* _node);
+             llvm::Module* get_module() const;
+        private:
             llvm::Function* codegen_function_definition(AstFunctionDefinition* _func);
             llvm::Function* codegen_function_declaration(AstFunction* _func);
             llvm::Value* codegen_expression(AstExpression* _expression);
             bool codegen_instruction(AstInstruction* _instruction);
-        private:
             void new_scope();
             void close_scope();
             llvm::AllocaInst* lookup_var(std::string _identifier);
