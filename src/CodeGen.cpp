@@ -28,8 +28,9 @@ namespace fela
             return codegen_expression(static_cast<AstExpression*>(_node)) != nullptr;
 
         case AstNodeType::function_definition:
-            return codegen_function(static_cast<AstFunctionDefinition*>(_node)) != nullptr;
+            return codegen_function_definition(static_cast<AstFunctionDefinition*>(_node)) != nullptr;
         case AstNodeType::function_declaration:
+            return codegen_function_declaration(static_cast<AstFunctionDeclaration*>(_node)) != nullptr;
 
         case AstNodeType::program:
             for (const auto& node : static_cast<AstProgram*>(_node)->nodes_)
@@ -48,7 +49,7 @@ namespace fela
 
 
 
-    llvm::Function* CodeGen::codegen_function_declaration(AstFunctionDeclaration* _func)
+    llvm::Function* CodeGen::codegen_function_declaration(AstFunction* _func)
     {
          llvm::Function* func = module_->getFunction(_func->identifier_);
         if (func) return nullptr; //redeclaration!
@@ -71,19 +72,11 @@ namespace fela
     llvm::Function* CodeGen::codegen_function_definition(AstFunctionDefinition* _func)
     {
         llvm::Function* func = module_->getFunction(_func->identifier_);
-        if (func) return nullptr;
-        llvm::Type* ret_type = to_llvm_type(_func->return_type_);
-        std::vector<llvm::Type*> param_types;
-        for (const auto& param : _func->parameters_)
+        if (!func)
         {
-            auto type = to_llvm_type(param.type_);
-            if (!type) return nullptr;
-            param_types.push_back(type);
+            func = codegen_function_declaration(_func);
         }
-        llvm::FunctionType* func_type = llvm::FunctionType::get(ret_type, param_types, false);
-
-         func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, _func->identifier_,
-                                                      module_.get());
+        if (!func || !func->empty()) return nullptr;
 
         llvm::BasicBlock* entry_block = llvm::BasicBlock::Create(*context_, "entry", func);
         builder_.SetInsertPoint(entry_block);
