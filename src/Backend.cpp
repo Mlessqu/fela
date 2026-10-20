@@ -11,17 +11,8 @@
 namespace fela::backend
 {
     /* TODO:
-    * 1. Wake up LLVM's native x86 backend:
-    • Call llvm::InitializeNativeTarget();
-    • Call llvm::InitializeNativeTargetAsmPrinter();
-    2. Get your machine's "Target Triple" & find the llvm::Target*:
-    • std::string triple_str = llvm::sys::getDefaultTargetTriple();
-    • llvm::Triple triple(triple_str);
-    • _module->setTargetTriple(triple);
-    • std::string err;
-    • const llvm::Target* target = llvm::TargetRegistry::lookupTarget(triple, err); (return false if !target).
-    3. Create the llvm::TargetMachine & set DataLayout on _module:
-    • llvm::TargetOptions opt;
+
+    •
     • llvm::TargetMachine* machine = target->createTargetMachine(triple, "generic", "", opt, llvm::Reloc::PIC_);
     • _module->setDataLayout(machine->createDataLayout());
     4. Open the .o file stream (same way you did in save_ir_to_file):
@@ -33,11 +24,44 @@ namespace fela::backend
     • Run it: pass.run(*_module);
     • dest.flush();
 */
+    namespace
+    {
+        const llvm::Target* prepare_target(std::string& _err)
+        {
+            llvm::InitializeNativeTarget();
+            llvm::InitializeNativeTargetAsmParser();
+            llvm::InitializeAllAsmPrinters();
+            std::string the_famous_triple_string = llvm::sys::getDefaultTargetTriple();
+            llvm::Triple triple(the_famous_triple_string);
+            const llvm::Target* target = llvm::TargetRegistry::lookupTarget(triple,_err);
+            return target;
+        }
+    }
     bool emit_object_file(llvm::Module* _module, std::string_view _obj_path)
     {
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmParser();
+        llvm::InitializeAllAsmPrinters();
         std::string the_famous_triple_string = llvm::sys::getDefaultTargetTriple();
+        llvm::Triple triple(the_famous_triple_string);
+        _module->setTargetTriple(triple);
+        std::string err;
+        const llvm::Target* target = llvm::TargetRegistry::lookupTarget(triple,err);
+        if (!target) return false;
+        llvm::TargetOptions options;
+        llvm::TargetMachine* machine = target->createTargetMachine(triple,"generic","",options,llvm::Reloc::PIC_);
+        _module->setDataLayout(machine->createDataLayout());
+        std::error_code err_code;
+        llvm::raw_fd_ostream target_file(_obj_path,err_code,llvm::sys::fs::OF_None);
+        if (err_code) return false;
+       llvm::legacy::PassManager pass_manager;
+        if (machine->addPassesToEmitFile(pass_manager,target_file,nullptr,llvm::CodeGenFileType::ObjectFile))
+        {
+            return false;
+        }
+        pass_manager.run(*_module);
+        target_file.flush();
+        return true;
     }
 
 
