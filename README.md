@@ -41,10 +41,14 @@ fela --path <source_file> [options]
 - [x] 1.Walk ast tree and just dump it into stream somewhere (for debugging) -done!
 - [x] Modify semantic checker to walk AST tree. -done
 - [x] Front end  officialy done yay
+- [x] learn llvm ir basics done
+- [x] llvm IR representation is done 
+      
 
 ## Current Goals
 
-- debugging front end :D
+- debugging llvm ir :D, propably many edge cases I missed, but I will fix it as they show up
+- emit object files .o using LLVM api and link into binary
 
 ## Language Constraints
 
