@@ -220,21 +220,51 @@ namespace fela
         case AstNodeType::primary_instruction:
             {
                 const auto& primary_instr = static_cast<AstPrimaryInstruction*>(_instruction);
+                llvm::Value* resolved_val = codegen_expression(primary_instr->expression_.get());
+                if (!resolved_val) return false;
                 return true;
             }
         case AstNodeType::variable_declaration:
             {
                 const auto& var_decl = static_cast<AstVariableDeclaration*>(_instruction);
+
+
+                llvm::Type* type = to_llvm_type(var_decl->type_);
+                if (!type) return false;
+                llvm::AllocaInst* var_name_alloca = builder_.CreateAlloca(
+                    type, nullptr, var_decl->identifier_);
+
+
+                scopes_.back()[var_decl->identifier_] = var_name_alloca;
+                if (var_decl->init_value_)
+                {
+                    llvm::Value* value = codegen_expression(var_decl->init_value_.get());
+                    builder_.CreateStore(value, var_name_alloca);
+                }
                 return true;
+
             }
         case AstNodeType::assign_instruction:
             {
                 const auto& assign_instr = static_cast<AstAssignInstruction*>(_instruction);
+                auto lhs = lookup_var(assign_instr->identifier_);
+                if (!lhs) return false;
+                llvm::Value* value = codegen_expression(assign_instr->rhs_.get());
+                builder_.CreateStore(value, lhs);
                 return true;
             }
         case AstNodeType::block_instruction:
             {
                 const auto& block_instr = static_cast<AstBlockInstruction*>(_instruction);
+                new_scope();
+                for (auto& instruction : block_instr->body_)
+                {
+                    if (!codegen_instruction(instruction.get()))
+                    {
+                        return false;
+                    }
+                }
+                close_scope();
                 return true;
             }
         case AstNodeType::if_instruction:
@@ -245,11 +275,29 @@ namespace fela
         case AstNodeType::while_instruction:
             {
                 const auto& while_instr = static_cast<AstWhileInstruction*>(_instruction);
-                return true;
+                llvm::Function* current_func = builder_.GetInsertBlock()->getParent();
+                llvm::BasicBlock* loop_condition = llvm::BasicBlock::Create(*context_, "loop_start",current_func);
+                llvm::BasicBlock* loop = llvm::BasicBlock::Create(*context_, "loop",current_func);
+                llvm::BasicBlock* end = llvm::BasicBlock::Create(*context_, "end",current_func);
+                builder_.SetInsertPoint(loop_condition);
+                llvm::Value* loop_conditional = codegen_expression(while_instr->condition_.get());
+                builder_.CreateCondBr(loop_conditional,loop,end);
+                builder_.SetInsertPoint(loop);
+                new_scope();
+                bool result = codegen_instruction(while_instr->body_.get());
+                close_scope();
+                return result;
             }
         case AstNodeType::return_instruction:
             {
                 const auto& return_instr = static_cast<AstReturnInstruction*>(_instruction);
+                llvm::Value* value = codegen_expression(return_instr->expression_.get());
+                if (!return_instr->expression_)
+                {
+                    builder_.CreateRetVoid();
+                    return true;
+                }
+                builder_.CreateRet(value);
                 return true;
             }
         default:
