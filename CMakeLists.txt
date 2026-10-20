@@ -27,6 +27,8 @@ add_executable(fela
         src/AstWalk.h++
         src/CodeGen.cpp
         src/CodeGen.h++
+        src/Backend.cpp
+        src/Backend.h++
 )
 target_link_libraries(fela PRIVATE LLVM)
 
