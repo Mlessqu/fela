@@ -3,6 +3,7 @@
 #include <optional>
 #include <string_view>
 #include <vector>
+#include <fmt/format.h>
 
 #include "AstWalk.h++"
 #include "Backend.h++"
@@ -26,7 +27,7 @@ struct CliOptions
 {
     std::string_view file_path_{};
     bool dump_ast_{false};
-    std::string_view output_file_{"a.out"};
+    std::string_view output_name_{"out"};
 };
 
 void print_usage(std::string_view _program_name)
@@ -34,7 +35,7 @@ void print_usage(std::string_view _program_name)
     std::cerr << "Usage: " << _program_name << " [options]\n"
               << "Options:\n"
               << "  " << CLI_FLAG_PATH_SHORT << ", " << CLI_FLAG_PATH_LONG << " <file>    Source file path\n"
-              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <file>   Output file path (default: a.out)\n"
+              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <name>   Output name (default: out)\n"
               << "      " << CLI_FLAG_AST_DUMP << "       Print AST after parsing\n";
 }
 
@@ -66,7 +67,7 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
                 std::cerr << "Error: " << arg << " requires argument\n";
                 return std::nullopt;
             }
-            options.output_file_ = _argv[i];
+            options.output_name_ = _argv[i];
         }
         else
         {
@@ -134,12 +135,30 @@ int main(int _argc, char** _argv)
     }
     fela::CodeGen ir_representation;
     ir_representation.generate_node(program.get());
-    if (!ir_representation.save_ir_to_file("mleko.ll"))
+    const std::string ir_path = fmt::format("{}.ll", cli->output_name_);
+    const std::string obj_path = fmt::format("{}.o", cli->output_name_);
+    const std::string binary_path = std::string(cli->output_name_);
+
+    if (!ir_representation.save_ir_to_file(ir_path))
     {
-        std::cout << "Error saving to file";
+        std::cerr << "Error saving IR to file: " << ir_path << "\n";
         return EXIT_CODE_FAILURE;
     }
-    std::cout << "Generated ir file";
-    fela::backend::emit_object_file(ir_representation.get_module(),"./");
+    std::cout << "Generated IR file: " << ir_path << "\n";
+
+    if (!fela::backend::emit_object_file(ir_representation.get_module(), obj_path))
+    {
+        std::cerr << "Error emitting object file: " << obj_path << "\n";
+        return EXIT_CODE_FAILURE;
+    }
+    std::cout << "Generated object file: " << obj_path << "\n";
+
+    if (!fela::backend::link_c_runtime_library(obj_path, binary_path))
+    {
+        std::cerr << "Error linking binary: " << binary_path << "\n";
+        return EXIT_CODE_FAILURE;
+    }
+    std::cout << "Generated binary: " << binary_path << "\n";
+
     return EXIT_CODE_SUCCESS;
 }
