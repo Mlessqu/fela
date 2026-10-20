@@ -279,6 +279,8 @@ namespace fela
                 llvm::BasicBlock* loop_condition = llvm::BasicBlock::Create(*context_, "loop_start",current_func);
                 llvm::BasicBlock* loop = llvm::BasicBlock::Create(*context_, "loop",current_func);
                 llvm::BasicBlock* end = llvm::BasicBlock::Create(*context_, "end",current_func);
+
+
                 builder_.SetInsertPoint(loop_condition);
                 llvm::Value* loop_conditional = codegen_expression(while_instr->condition_.get());
                 builder_.CreateCondBr(loop_conditional,loop,end);
@@ -286,17 +288,23 @@ namespace fela
                 new_scope();
                 bool result = codegen_instruction(while_instr->body_.get());
                 close_scope();
+                if (!builder_.GetInsertBlock()->getTerminator())
+                {
+                builder_.CreateBr(loop_condition);
+                }
+                builder_.SetInsertPoint(end);
                 return result;
             }
         case AstNodeType::return_instruction:
             {
                 const auto& return_instr = static_cast<AstReturnInstruction*>(_instruction);
-                llvm::Value* value = codegen_expression(return_instr->expression_.get());
                 if (!return_instr->expression_)
                 {
                     builder_.CreateRetVoid();
                     return true;
                 }
+                llvm::Value* value = codegen_expression(return_instr->expression_.get());
+                if (!value) return false;
                 builder_.CreateRet(value);
                 return true;
             }
