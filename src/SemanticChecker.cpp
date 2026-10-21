@@ -313,6 +313,11 @@ namespace fela
                 auto function_call_ptr = static_cast<AstFunctionCall*>(_node);
                 const std::string& identifier = function_call_ptr->identifier_;
 
+                if (identifier == "print")
+                {
+                    return check_builtin_print(function_call_ptr);
+                }
+
                 const Symbol* symbol = symbol_table_.lookup(identifier);
                 if (!symbol)
                 {
@@ -517,6 +522,30 @@ namespace fela
         }
 
         return !should_abort_;
+    }
+
+
+    bool SemanticChecker::check_builtin_print(AstFunctionCall* _call)
+    {
+        if (!_call) return false;
+        if (_call->arguments_.size() != 1)
+        {
+            push_error(_call, fmt::format("'print' expects exactly 1 argument, got {}",
+                                          _call->arguments_.size()));
+            return false;
+        }
+
+        auto* arg_ptr = _call->arguments_[0].get();
+        check_node(arg_ptr);
+        if (arg_ptr->resolved_type_ != DataType::int_type && arg_ptr->resolved_type_ != DataType::bool_type)
+        {
+            push_error(arg_ptr, fmt::format("'print' expects 'int' or 'bool', got {}",
+                                            data_type_to_string_view(arg_ptr->resolved_type_)));
+            return false;
+        }
+
+        _call->resolved_type_ = DataType::void_type;
+        return true;
     }
 
 

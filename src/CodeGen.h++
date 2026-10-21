@@ -31,6 +31,7 @@
             bool generate_node(AstBase* _node);
              llvm::Module* get_module() const;
         private:
+            llvm::Value* codegen_builtin_print(AstFunctionCall* _func_call);
             llvm::Function* codegen_function_definition(AstFunctionDefinition* _func);
             llvm::Function* codegen_function_declaration(AstFunction* _func);
             llvm::Value* codegen_expression(AstExpression* _expression);

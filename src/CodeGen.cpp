@@ -153,6 +153,34 @@ namespace fela
     }
 
 
+    llvm::Value* CodeGen::codegen_builtin_print(AstFunctionCall* _func_call)
+    {
+        if (!_func_call || _func_call->arguments_.size() != 1) return nullptr;
+        llvm::Value* arg_val = codegen_expression(_func_call->arguments_[0].get());
+        if (!arg_val) return nullptr;
+
+        if (arg_val->getType()->isIntegerTy(32))
+        {
+            llvm::FunctionType* printf_type = llvm::FunctionType::get(
+                builder_.getInt32Ty(), {builder_.getPtrTy()}, true);
+            llvm::FunctionCallee printf_func = module_->getOrInsertFunction("printf", printf_type);
+            return builder_.CreateCall(printf_func, {builder_.CreateGlobalString("%d\n"), arg_val});
+        }
+        if (arg_val->getType()->isIntegerTy(1))
+        {
+            llvm::FunctionType* puts_type = llvm::FunctionType::get(
+                builder_.getInt32Ty(), {builder_.getPtrTy()}, false);
+            llvm::FunctionCallee puts_func = module_->getOrInsertFunction("puts", puts_type);
+            llvm::Value* str = builder_.CreateSelect(
+                arg_val,
+                builder_.CreateGlobalString("true"),
+                builder_.CreateGlobalString("false"));
+            return builder_.CreateCall(puts_func, {str});
+        }
+        return nullptr;
+    }
+
+
     llvm::Value* CodeGen::codegen_expression(AstExpression* _expression)
     {
         switch (_expression->node_type_)
@@ -270,6 +298,11 @@ namespace fela
         case AstNodeType::function_call:
             {
                 const auto& func_call = static_cast<AstFunctionCall*>(_expression);
+
+                if (func_call->identifier_ == "print")
+                {
+                    return codegen_builtin_print(func_call);
+                }
 
                 llvm::Function* function = module_->getFunction(func_call->identifier_);
                 if (!function) return nullptr;
