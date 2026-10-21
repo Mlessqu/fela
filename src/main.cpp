@@ -1,4 +1,5 @@
 
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string_view>
@@ -22,21 +23,32 @@ constexpr std::string_view CLI_FLAG_AST_DUMP_SHORT = "-d";
 constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
 constexpr std::string_view CLI_FLAG_OUTPUT = "--out";
 constexpr std::string_view CLI_FLAG_OUTPUT_SHORT = "-o";
+constexpr std::string_view CLI_FLAG_COMPILE_ONLY = "-c";
+constexpr std::string_view CLI_FLAG_EMIT_LLVM_SHORT = "-S";
+constexpr std::string_view CLI_FLAG_EMIT_LLVM = "--emit-llvm";
+constexpr std::string_view CLI_FLAG_HELP_SHORT = "-h";
+constexpr std::string_view CLI_FLAG_HELP = "--help";
 
 struct CliOptions
 {
     std::string_view file_path_{};
     bool dump_ast_{false};
-    std::string_view output_name_{"out"};
+    bool compile_only_{false};
+    bool emit_llvm_only_{false};
+    bool show_help_{false};
+    std::string output_name_{};
 };
 
 void print_usage(std::string_view _program_name)
 {
-    std::cerr << "Usage: " << _program_name << " [options]\n"
+    std::cerr << "Usage: " << _program_name << " [options] <source_file>\n"
               << "Options:\n"
-              << "  " << CLI_FLAG_PATH_SHORT << ", " << CLI_FLAG_PATH_LONG << " <file>    Source file path\n"
-              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <name>   Output name (default: out)\n"
-              << "      " << CLI_FLAG_AST_DUMP << "       Print AST after parsing\n";
+              << "  <source_file>                     Input source file (or " << CLI_FLAG_PATH_SHORT << " <file>)\n"
+              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <name>                Output base name (default: input file name)\n"
+              << "  " << CLI_FLAG_COMPILE_ONLY << "                                Compile to object file only (do not link)\n"
+              << "  " << CLI_FLAG_EMIT_LLVM_SHORT << ", " << CLI_FLAG_EMIT_LLVM << "                 Emit LLVM IR file only\n"
+              << "  " << CLI_FLAG_AST_DUMP_SHORT << ", " << CLI_FLAG_AST_DUMP << "                    Print AST after parsing\n"
+              << "  " << CLI_FLAG_HELP_SHORT << ", " << CLI_FLAG_HELP << "                       Display this help message\n";
 }
 
 std::optional<CliOptions> parse_args(int _argc, char** _argv)
@@ -47,7 +59,12 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
     {
         const std::string_view arg{_argv[i]};
 
-        if (arg == CLI_FLAG_PATH_SHORT || arg == CLI_FLAG_PATH_LONG)
+        if (arg == CLI_FLAG_HELP || arg == CLI_FLAG_HELP_SHORT)
+        {
+            options.show_help_ = true;
+            return options;
+        }
+        else if (arg == CLI_FLAG_PATH_SHORT || arg == CLI_FLAG_PATH_LONG)
         {
             if (++i >= _argc)
             {
@@ -56,9 +73,17 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
             }
             options.file_path_ = _argv[i];
         }
-        else if (arg == CLI_FLAG_AST_DUMP|| arg == CLI_FLAG_AST_DUMP_SHORT)
+        else if (arg == CLI_FLAG_AST_DUMP || arg == CLI_FLAG_AST_DUMP_SHORT)
         {
             options.dump_ast_ = true;
+        }
+        else if (arg == CLI_FLAG_COMPILE_ONLY)
+        {
+            options.compile_only_ = true;
+        }
+        else if (arg == CLI_FLAG_EMIT_LLVM || arg == CLI_FLAG_EMIT_LLVM_SHORT)
+        {
+            options.emit_llvm_only_ = true;
         }
         else if (arg == CLI_FLAG_OUTPUT || arg == CLI_FLAG_OUTPUT_SHORT)
         {
@@ -69,6 +94,15 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
             }
             options.output_name_ = _argv[i];
         }
+        else if (!arg.starts_with("-"))
+        {
+            if (!options.file_path_.empty())
+            {
+                std::cerr << "Error: multiple input files not supported ('" << options.file_path_ << "' and '" << arg << "')\n";
+                return std::nullopt;
+            }
+            options.file_path_ = arg;
+        }
         else
         {
             std::cerr << "Unknown option: " << arg << "\n";
@@ -78,8 +112,14 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
 
     if (options.file_path_.empty())
     {
-        std::cerr << "Error: input file path required\n";
+        std::cerr << "Error: input source file required\n";
+        print_usage(_argv[0]);
         return std::nullopt;
+    }
+
+    if (options.output_name_.empty())
+    {
+        options.output_name_ = std::filesystem::path(options.file_path_).stem().string();
     }
 
     return options;
@@ -90,8 +130,12 @@ int main(int _argc, char** _argv)
     const auto cli = parse_args(_argc, _argv);
     if (!cli)
     {
-        print_usage(_argv[0]);
         return EXIT_CODE_FAILURE;
+    }
+    if (cli->show_help_)
+    {
+        print_usage(_argv[0]);
+        return EXIT_CODE_SUCCESS;
     }
 
     fela::Lexer lexer;
@@ -129,15 +173,18 @@ int main(int _argc, char** _argv)
         std::cout << err;
     }
 
-    if (is_semantic_passed)
+    if (!is_semantic_passed)
     {
-        std::cout << "Semantic passed\n";
+        return EXIT_CODE_FAILURE;
     }
+
+    std::cout << "Semantic passed\n";
+
     fela::CodeGen ir_representation;
     ir_representation.generate_node(program.get());
     const std::string ir_path = fmt::format("{}.ll", cli->output_name_);
     const std::string obj_path = fmt::format("{}.o", cli->output_name_);
-    const std::string binary_path = std::string(cli->output_name_);
+    const std::string binary_path = cli->output_name_;
 
     if (!ir_representation.save_ir_to_file(ir_path))
     {
@@ -146,12 +193,22 @@ int main(int _argc, char** _argv)
     }
     std::cout << "Generated IR file: " << ir_path << "\n";
 
+    if (cli->emit_llvm_only_)
+    {
+        return EXIT_CODE_SUCCESS;
+    }
+
     if (!fela::backend::emit_object_file(ir_representation.get_module(), obj_path))
     {
         std::cerr << "Error emitting object file: " << obj_path << "\n";
         return EXIT_CODE_FAILURE;
     }
     std::cout << "Generated object file: " << obj_path << "\n";
+
+    if (cli->compile_only_)
+    {
+        return EXIT_CODE_SUCCESS;
+    }
 
     if (!fela::backend::link_c_runtime_library(obj_path, binary_path))
     {
