@@ -317,6 +317,10 @@ namespace fela
                 {
                     return check_builtin_print(function_call_ptr);
                 }
+                if (identifier == "read")
+                {
+                    return check_builtin_read(function_call_ptr);
+                }
 
                 const Symbol* symbol = symbol_table_.lookup(identifier);
                 if (!symbol)
@@ -545,6 +549,19 @@ namespace fela
         }
 
         _call->resolved_type_ = DataType::void_type;
+        return true;
+    }
+
+
+    bool SemanticChecker::check_builtin_read(AstFunctionCall* _call)
+    {
+        if (!_call) return false;
+        if (_call->arguments_.size()!=0)
+        {
+            push_error(_call,fmt::format("'read' expects 0 arguments, got {}",_call->arguments_.size()));
+            return false;
+        }
+        _call->resolved_type_ = DataType::int_type;
         return true;
     }
 

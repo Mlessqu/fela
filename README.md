@@ -6,20 +6,27 @@ This repo is meant to document that journey.
 
 ## Overview
 
-**Fela** is a micro C-subset language and 2-pass compiler frontend (Lexer -> Parser -> AST -> Semantic Checker).
+**Fela** is a micro C-subset programming language and an end-to-end compiler built from scratch in C++20 using LLVM:
+**Lexer -> Parser -> AST -> Semantic Checker -> LLVM IR CodeGen -> TargetMachine Object File (.o) -> Linker Executable**.
 
-It follows standard C syntax: curly braces `{}` for scopes, semicolons `;` terminating statements, C-style function declarations/definitions, and familiar keywords (`if`, `else`, `while`, `return`). If it looks like valid C (without pointers, structs, or `#include`), it parses as Fela.
+It follows standard C syntax: curly braces `{}` for scopes, semicolons `;` terminating statements, C-style function declarations/definitions, and familiar keywords (`if`, `else`, `while`, `return`). If it looks like valid C (without pointers, structs, or `#include`), it compiles on Fela.
 
 ## Usage
 
 ```bash
-fela -p <source_file> [options]
-fela --path <source_file> [options]
+fela [options] <source_file>
 ```
 
 ### Options
-- `-p, --path <file>`: Source file path (required)
-- `--ast-dump`: Print AST after parsing
+- `<source_file>`: Input source file path (or `-p, --path <file>`)
+- `-o, --out <name>`: Output base name (default: derived from input file name)
+- `-c`: Compile to object file only (`.o`), do not link executable
+- `-S, --emit-llvm`: Emit LLVM IR file only (`.ll`)
+- `-d, --ast-dump`: Print AST after parsing
+- `-h, --help`: Display help message
+
+### Built-in Functions
+- `print(x)`: Prints an `int` or `bool` followed by a newline to stdout.
 
 ## Milestones
 
@@ -27,10 +34,10 @@ fela --path <source_file> [options]
 - [x] write micro subset of C using ENBF -done
 - [x] Research and write lexer skeleton - done
 - [x] write lexer - done
-- [x] boring unit tests for lexer - done  by AI
+- [x] boring unit tests for lexer - done by AI
 - [x] Research and write parser skeleton. - done
 - [x] write parser - done
-- [x] boring unit tests for parser - done  by AI
+- [x] boring unit tests for parser - done by AI
 - [x] Research how clang implements sema and AST.-done
 - [x] Research how to implement symbol table and ast nodes - done
 - [x] define some initial ast tree data structure - done
@@ -40,15 +47,20 @@ fela --path <source_file> [options]
 - [x] Modify parser to produce just the AST tree -done!
 - [x] 1.Walk ast tree and just dump it into stream somewhere (for debugging) -done!
 - [x] Modify semantic checker to walk AST tree. -done
-- [x] Front end  officialy done yay
+- [x] Front end officially done yay
 - [x] learn llvm ir basics done
-- [x] llvm IR representation is done 
-      
+- [x] llvm IR representation (CodeGen) done!
+- [x] Support global and local variables in IR - done!
+- [x] Backend object file emission (`.o`) via LLVM `TargetMachine` - done!
+- [x] System runtime linking (`cc`) into executable binary - done!
+- [x] Built-in `print(x)` function for `int` and `bool` - done!
+- [x] Standard compiler CLI (positional source argument, `-o`, `-c`, `-S`, `-h`) - done!
 
 ## Current Goals
 
-- debugging llvm ir :D, propably many edge cases I missed, but I will fix it as they show up
-- emit object files .o using LLVM api and link into binary
+- Add automated end-to-end test suite compiling and running sample Fela programs
+- Fix remaining edge cases in Semantic Checker (return type verification, binary op checks)
+- Hook up LLVM optimization pipeline (`mem2reg` / `-O2`)
 
 ## Language Constraints
 

@@ -25,7 +25,8 @@ namespace fela
     private:
         void push_error(AstBase* _node, std::string _err_msg);
         [[nodiscard]] bool check_builtin_print(AstFunctionCall* _call);
-        [[nodiscard]] bool check_binary_expression(AstBinaryExpression* _binary_expression_node);
+        [[nodiscard]] bool check_builtin_read(AstFunctionCall* _call);
+         [[nodiscard]] bool check_binary_expression(AstBinaryExpression* _binary_expression_node);
         [[nodiscard]] bool check_unary_expression(AstUnaryExpression* _unary_node);
         [[nodiscard]] bool check_main();
         [[nodiscard]] bool is_global_scope() const;

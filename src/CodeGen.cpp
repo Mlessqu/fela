@@ -181,6 +181,18 @@ namespace fela
     }
 
 
+    llvm::Value* CodeGen::codegen_builtin_read()
+    {
+
+        llvm::FunctionType* scanf_type = llvm::FunctionType::get(builder_.getInt32Ty(),{builder_.getPtrTy()},true);
+        llvm::FunctionCallee scanf_function = module_->getOrInsertFunction("scanf",scanf_type);
+
+        llvm::AllocaInst* input = builder_.CreateAlloca(builder_.getInt32Ty());
+        builder_.CreateCall(scanf_function,{builder_.CreateGlobalString("%d"),input});
+        return builder_.CreateLoad(builder_.getInt32Ty(),input);
+    }
+
+
     llvm::Value* CodeGen::codegen_expression(AstExpression* _expression)
     {
         switch (_expression->node_type_)
@@ -302,6 +314,10 @@ namespace fela
                 if (func_call->identifier_ == "print")
                 {
                     return codegen_builtin_print(func_call);
+                }
+                if (func_call->identifier_ == "read")
+                {
+                    return codegen_builtin_read();
                 }
 
                 llvm::Function* function = module_->getFunction(func_call->identifier_);
