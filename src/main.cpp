@@ -19,7 +19,7 @@ constexpr int CLI_FIRST_ARG_INDEX = 1;
 
 constexpr std::string_view CLI_FLAG_PATH_SHORT = "-p";
 constexpr std::string_view CLI_FLAG_PATH_LONG = "--path";
-constexpr std::string_view CLI_FLAG_AST_DUMP_SHORT = "-d";
+constexpr std::string_view CLI_FLAG_AST_DUMP_SHORT = "-a";
 constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
 constexpr std::string_view CLI_FLAG_OUTPUT = "--out";
 constexpr std::string_view CLI_FLAG_OUTPUT_SHORT = "-o";
