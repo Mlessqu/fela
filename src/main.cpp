@@ -159,7 +159,7 @@ int main(int _argc, char** _argv)
         std::cerr << "Failed to parse program\n";
         return EXIT_CODE_FAILURE;
     }
-
+    std::cout << "Program parsed\n";
     if (cli->dump_ast_)
     {
         std::cout << fela::ast_dump_node(program.get());

@@ -1,13 +1,15 @@
 #include "Backend.h++"
 
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
 #include <fmt/format.h>
-#include<llvm/Support/TargetSelect.h>
-#include<llvm/TargetParser/Host.h>
-#include<llvm/MC/TargetRegistry.h>
-#include<llvm/Target/TargetMachine.h>
-#include<llvm/IR/LegacyPassManager.h>
-#include<llvm/Support/FileSystem.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/TargetParser/Host.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/raw_ostream.h>
 namespace fela::backend
 {
     /* TODO:
@@ -30,6 +32,11 @@ namespace fela::backend
     }
     bool emit_object_file(llvm::Module* _module, std::string_view _obj_path)
     {
+        if (llvm::verifyModule(*_module, &llvm::errs()))
+        {
+            return false;
+        }
+
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmParser();
         llvm::InitializeNativeTargetAsmPrinter();

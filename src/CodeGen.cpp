@@ -423,8 +423,10 @@ namespace fela
                 llvm::BasicBlock* then = llvm::BasicBlock::Create(*context_, "then", current_func);
                 llvm::BasicBlock* else_block = llvm::BasicBlock::Create(*context_, "else_block", current_func);
                 llvm::BasicBlock* tail = llvm::BasicBlock::Create(*context_, "tail", current_func);
-
-                builder_.CreateBr(if_condition);
+                if (!builder_.GetInsertBlock()->hasTerminator())
+                {
+                    builder_.CreateBr(if_condition);
+                }
                 builder_.SetInsertPoint(if_condition);
                 llvm::Value* if_condition_result = codegen_expression(if_instr->condition_.get());
                 builder_.CreateCondBr(if_condition_result, then, else_block);
@@ -447,9 +449,13 @@ namespace fela
                 {
                     builder_.CreateBr(tail);
                 }
-
-
+                if (tail->hasNPredecessors(0))
+                {
+                    tail->eraseFromParent();
+                }else
+                {
                 builder_.SetInsertPoint(tail);
+                }
 
                 return true;
             }
