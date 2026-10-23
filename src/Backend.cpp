@@ -66,12 +66,13 @@ namespace fela::backend
             return false;
         }
         pass_manager.run(*_module);
+        optimize_module(_module);
         target_file.flush();
         return true;
     }
 
 
-    void optimize_module(llvm::Module* _module, llvm::OptimizationLevel _optimization_level)
+    void optimize_module(llvm::Module* _module)
     {
         llvm::LoopAnalysisManager loop_analysis_manager;
         llvm::FunctionAnalysisManager function_analysis_manager;
