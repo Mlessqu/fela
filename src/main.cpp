@@ -24,7 +24,7 @@ constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
 constexpr std::string_view CLI_FLAG_OUTPUT = "--out";
 constexpr std::string_view CLI_FLAG_OUTPUT_SHORT = "-o";
 constexpr std::string_view CLI_FLAG_COMPILE_ONLY = "-c";
-constexpr std::string_view CLI_FLAG_EMIT_LLVM_SHORT = "-S";
+constexpr std::string_view CLI_FLAG_EMIT_LLVM_SHORT = "-l";
 constexpr std::string_view CLI_FLAG_EMIT_LLVM = "--emit-llvm";
 constexpr std::string_view CLI_FLAG_HELP_SHORT = "-h";
 constexpr std::string_view CLI_FLAG_HELP = "--help";
@@ -182,16 +182,26 @@ int main(int _argc, char** _argv)
 
     fela::CodeGen ir_representation;
     ir_representation.generate_node(program.get());
+    const std::string raw_ir_path = fmt::format("{}_raw.ll", cli->output_name_);
     const std::string ir_path = fmt::format("{}.ll", cli->output_name_);
     const std::string obj_path = fmt::format("{}.o", cli->output_name_);
     const std::string binary_path = cli->output_name_;
 
-    if (!ir_representation.save_ir_to_file(ir_path))
+    if (!ir_representation.save_ir_to_file(raw_ir_path))
     {
-        std::cerr << "Error saving IR to file: " << ir_path << "\n";
+        std::cerr << "Error saving raw IR to file: " << raw_ir_path << "\n";
         return EXIT_CODE_FAILURE;
     }
-    std::cout << "Generated IR file: " << ir_path << "\n";
+    std::cout << "Generated raw IR file: " << raw_ir_path << "\n";
+
+    fela::backend::optimize_module(ir_representation.get_module());
+
+    if (!ir_representation.save_ir_to_file(ir_path))
+    {
+        std::cerr << "Error saving optimized IR to file: " << ir_path << "\n";
+        return EXIT_CODE_FAILURE;
+    }
+    std::cout << "Generated optimized IR file: " << ir_path << "\n";
 
     if (cli->emit_llvm_only_)
     {

@@ -66,7 +66,6 @@ namespace fela::backend
             return false;
         }
         pass_manager.run(*_module);
-        optimize_module(_module);
         target_file.flush();
         return true;
     }
