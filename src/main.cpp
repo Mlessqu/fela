@@ -19,36 +19,42 @@ constexpr int CLI_FIRST_ARG_INDEX = 1;
 
 constexpr std::string_view CLI_FLAG_PATH_SHORT = "-p";
 constexpr std::string_view CLI_FLAG_PATH_LONG = "--path";
-constexpr std::string_view CLI_FLAG_AST_DUMP_SHORT = "-a";
-constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
 constexpr std::string_view CLI_FLAG_OUTPUT = "--out";
 constexpr std::string_view CLI_FLAG_OUTPUT_SHORT = "-o";
-constexpr std::string_view CLI_FLAG_COMPILE_ONLY = "-c";
-constexpr std::string_view CLI_FLAG_EMIT_LLVM_SHORT = "-l";
-constexpr std::string_view CLI_FLAG_EMIT_LLVM = "--emit-llvm";
+constexpr std::string_view CLI_FLAG_DUMP_ALL_SHORT = "-d";
+constexpr std::string_view CLI_FLAG_DUMP_ALL = "--dump-all";
 constexpr std::string_view CLI_FLAG_HELP_SHORT = "-h";
 constexpr std::string_view CLI_FLAG_HELP = "--help";
+
+constexpr std::string_view CLI_FLAG_AST_DUMP = "--ast-dump";
+constexpr std::string_view CLI_FLAG_EMIT_LLVM = "--emit-llvm";
+constexpr std::string_view CLI_FLAG_COMPILE_ONLY = "--compile-only";
+constexpr std::string_view CLI_FLAG_BINARY = "--binary";
 
 struct CliOptions
 {
     std::string_view file_path_{};
     bool dump_ast_{false};
-    bool compile_only_{false};
-    bool emit_llvm_only_{false};
+    bool emit_llvm_{false};
+    bool emit_obj_{false};
+    bool emit_binary_{false};
     bool show_help_{false};
     std::string output_name_{};
 };
 
 void print_usage(std::string_view _program_name)
 {
-    std::cerr << "Usage: " << _program_name << " [options] <source_file>\n"
-              << "Options:\n"
-              << "  <source_file>                     Input source file (or " << CLI_FLAG_PATH_SHORT << " <file>)\n"
-              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <name>                Output base name (default: input file name)\n"
-              << "  " << CLI_FLAG_COMPILE_ONLY << "                                Compile to object file only (do not link)\n"
-              << "  " << CLI_FLAG_EMIT_LLVM_SHORT << ", " << CLI_FLAG_EMIT_LLVM << "                 Emit LLVM IR file only\n"
-              << "  " << CLI_FLAG_AST_DUMP_SHORT << ", " << CLI_FLAG_AST_DUMP << "                    Print AST after parsing\n"
-              << "  " << CLI_FLAG_HELP_SHORT << ", " << CLI_FLAG_HELP << "                       Display this help message\n";
+    std::cerr << "Usage: " << _program_name << " " << CLI_FLAG_PATH_SHORT << " <source_file> [options]\n\n"
+              << "General Options (non-chaining):\n"
+              << "  " << CLI_FLAG_PATH_SHORT << ", " << CLI_FLAG_PATH_LONG << " <file>                 Input source file (required)\n"
+              << "  " << CLI_FLAG_OUTPUT_SHORT << ", " << CLI_FLAG_OUTPUT << " <name>                Output base name (default: input file stem)\n"
+              << "  " << CLI_FLAG_DUMP_ALL_SHORT << ", " << CLI_FLAG_DUMP_ALL << "                 Dump all outputs (-a, -l, -c, -b)\n"
+              << "  " << CLI_FLAG_HELP_SHORT << ", " << CLI_FLAG_HELP << "                       Display this help message\n\n"
+              << "Emission Toggles (chainable, e.g. -clb, default: -b):\n"
+              << "  -a, " << CLI_FLAG_AST_DUMP << "                    Print AST after parsing\n"
+              << "  -l, " << CLI_FLAG_EMIT_LLVM << "                 Emit LLVM IR files (.ll, raw and optimized)\n"
+              << "  -c, " << CLI_FLAG_COMPILE_ONLY << "                Emit object file (.o)\n"
+              << "  -b, " << CLI_FLAG_BINARY << "                      Emit linked binary executable\n";
 }
 
 std::optional<CliOptions> parse_args(int _argc, char** _argv)
@@ -71,19 +77,12 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
                 std::cerr << "Error: " << arg << " requires argument\n";
                 return std::nullopt;
             }
+            if (!options.file_path_.empty())
+            {
+                std::cerr << "Error: multiple input files not supported ('" << options.file_path_ << "' and '" << _argv[i] << "')\n";
+                return std::nullopt;
+            }
             options.file_path_ = _argv[i];
-        }
-        else if (arg == CLI_FLAG_AST_DUMP || arg == CLI_FLAG_AST_DUMP_SHORT)
-        {
-            options.dump_ast_ = true;
-        }
-        else if (arg == CLI_FLAG_COMPILE_ONLY)
-        {
-            options.compile_only_ = true;
-        }
-        else if (arg == CLI_FLAG_EMIT_LLVM || arg == CLI_FLAG_EMIT_LLVM_SHORT)
-        {
-            options.emit_llvm_only_ = true;
         }
         else if (arg == CLI_FLAG_OUTPUT || arg == CLI_FLAG_OUTPUT_SHORT)
         {
@@ -94,14 +93,78 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
             }
             options.output_name_ = _argv[i];
         }
-        else if (!arg.starts_with("-"))
+        else if (arg == CLI_FLAG_DUMP_ALL || arg == CLI_FLAG_DUMP_ALL_SHORT)
         {
-            if (!options.file_path_.empty())
+            options.dump_ast_ = true;
+            options.emit_llvm_ = true;
+            options.emit_obj_ = true;
+            options.emit_binary_ = true;
+        }
+        else if (arg == CLI_FLAG_AST_DUMP)
+        {
+            options.dump_ast_ = true;
+        }
+        else if (arg == CLI_FLAG_EMIT_LLVM)
+        {
+            options.emit_llvm_ = true;
+        }
+        else if (arg == CLI_FLAG_COMPILE_ONLY)
+        {
+            options.emit_obj_ = true;
+        }
+        else if (arg == CLI_FLAG_BINARY)
+        {
+            options.emit_binary_ = true;
+        }
+        else if (arg.starts_with("-") && !arg.starts_with("--"))
+        {
+            if (arg.size() == 1)
             {
-                std::cerr << "Error: multiple input files not supported ('" << options.file_path_ << "' and '" << arg << "')\n";
+                std::cerr << "Unknown option: -\n";
                 return std::nullopt;
             }
-            options.file_path_ = arg;
+
+            if (arg.find('d') != std::string_view::npos && arg.size() > 2)
+            {
+                std::cerr << "Error: -d cannot be chained with other options\n";
+                return std::nullopt;
+            }
+
+            for (size_t j = 1; j < arg.size(); ++j)
+            {
+                const char ch = arg[j];
+                switch (ch)
+                {
+                case 'h':
+                    options.show_help_ = true;
+                    return options;
+                case 'a':
+                    options.dump_ast_ = true;
+                    break;
+                case 'l':
+                    options.emit_llvm_ = true;
+                    break;
+                case 'c':
+                    options.emit_obj_ = true;
+                    break;
+                case 'b':
+                    options.emit_binary_ = true;
+                    break;
+                case 'p':
+                case 'o':
+                    std::cerr << "Error: -" << ch << " requires argument and cannot be chained\n";
+                    return std::nullopt;
+                default:
+                    std::cerr << "Unknown option: -" << ch << "\n";
+                    return std::nullopt;
+                }
+            }
+        }
+        else if (!arg.starts_with("-"))
+        {
+            std::cerr << "Error: positional argument '" << arg << "' not supported, use "
+                      << CLI_FLAG_PATH_SHORT << " or " << CLI_FLAG_PATH_LONG << " <file>\n";
+            return std::nullopt;
         }
         else
         {
@@ -112,7 +175,7 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
 
     if (options.file_path_.empty())
     {
-        std::cerr << "Error: input source file required\n";
+        std::cerr << "Error: input source file required (" << CLI_FLAG_PATH_SHORT << ", " << CLI_FLAG_PATH_LONG << " <file>)\n";
         print_usage(_argv[0]);
         return std::nullopt;
     }
@@ -120,6 +183,12 @@ std::optional<CliOptions> parse_args(int _argc, char** _argv)
     if (options.output_name_.empty())
     {
         options.output_name_ = std::filesystem::path(options.file_path_).stem().string();
+    }
+
+    const bool any_emission_flag = options.dump_ast_ || options.emit_llvm_ || options.emit_obj_ || options.emit_binary_;
+    if (!any_emission_flag)
+    {
+        options.emit_binary_ = true;
     }
 
     return options;
@@ -180,6 +249,11 @@ int main(int _argc, char** _argv)
 
     std::cout << "Semantic passed\n";
 
+    if (!cli->emit_llvm_ && !cli->emit_obj_ && !cli->emit_binary_)
+    {
+        return EXIT_CODE_SUCCESS;
+    }
+
     fela::CodeGen ir_representation;
     ir_representation.generate_node(program.get());
     const std::string raw_ir_path = fmt::format("{}_raw.ll", cli->output_name_);
@@ -187,23 +261,29 @@ int main(int _argc, char** _argv)
     const std::string obj_path = fmt::format("{}.o", cli->output_name_);
     const std::string binary_path = cli->output_name_;
 
-    if (!ir_representation.save_ir_to_file(raw_ir_path))
+    if (cli->emit_llvm_)
     {
-        std::cerr << "Error saving raw IR to file: " << raw_ir_path << "\n";
-        return EXIT_CODE_FAILURE;
+        if (!ir_representation.save_ir_to_file(raw_ir_path))
+        {
+            std::cerr << "Error saving raw IR to file: " << raw_ir_path << "\n";
+            return EXIT_CODE_FAILURE;
+        }
+        std::cout << "Generated raw IR file: " << raw_ir_path << "\n";
     }
-    std::cout << "Generated raw IR file: " << raw_ir_path << "\n";
 
     fela::backend::optimize_module(ir_representation.get_module());
 
-    if (!ir_representation.save_ir_to_file(ir_path))
+    if (cli->emit_llvm_)
     {
-        std::cerr << "Error saving optimized IR to file: " << ir_path << "\n";
-        return EXIT_CODE_FAILURE;
+        if (!ir_representation.save_ir_to_file(ir_path))
+        {
+            std::cerr << "Error saving optimized IR to file: " << ir_path << "\n";
+            return EXIT_CODE_FAILURE;
+        }
+        std::cout << "Generated optimized IR file: " << ir_path << "\n";
     }
-    std::cout << "Generated optimized IR file: " << ir_path << "\n";
 
-    if (cli->emit_llvm_only_)
+    if (!cli->emit_obj_ && !cli->emit_binary_)
     {
         return EXIT_CODE_SUCCESS;
     }
@@ -213,9 +293,12 @@ int main(int _argc, char** _argv)
         std::cerr << "Error emitting object file: " << obj_path << "\n";
         return EXIT_CODE_FAILURE;
     }
-    std::cout << "Generated object file: " << obj_path << "\n";
+    if (cli->emit_obj_)
+    {
+        std::cout << "Generated object file: " << obj_path << "\n";
+    }
 
-    if (cli->compile_only_)
+    if (!cli->emit_binary_)
     {
         return EXIT_CODE_SUCCESS;
     }
@@ -226,6 +309,11 @@ int main(int _argc, char** _argv)
         return EXIT_CODE_FAILURE;
     }
     std::cout << "Generated binary: " << binary_path << "\n";
+
+    if (!cli->emit_obj_)
+    {
+        std::filesystem::remove(obj_path);
+    }
 
     return EXIT_CODE_SUCCESS;
 }

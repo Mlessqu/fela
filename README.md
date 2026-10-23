@@ -14,19 +14,25 @@ It follows standard C syntax: curly braces `{}` for scopes, semicolons `;` termi
 ## Usage
 
 ```bash
-fela [options] <source_file>
+fela -p <source_file> [options]
 ```
 
-### Options
-- `<source_file>`: Input source file path (or `-p, --path <file>`)
-- `-o, --out <name>`: Output base name (default: derived from input file name)
-- `-c`: Compile to object file only (`.o`), do not link executable
-- `-S, --emit-llvm`: Emit LLVM IR file only (`.ll`)
-- `-d, --ast-dump`: Print AST after parsing
+### General Options (Non-chaining)
+- `-p, --path <file>`: Input source file path (**required**)
+- `-o, --out <name>`: Output base name (default: derived from input file stem)
+- `-d, --dump-all`: Dump all outputs (equivalent to `-alcb`: AST, raw & optimized IR, object file, and binary)
 - `-h, --help`: Display help message
+
+### Emission Toggles (Chainable)
+Toggles specify which output files to produce. Can be chained (e.g. `-clb`, `-lb`, `-cb`). If no emission flags are specified, defaults to `-b` (binary only).
+- `-a, --ast-dump`: Print AST after parsing
+- `-l, --emit-llvm`: Emit LLVM IR files (`<name>_raw.ll` and optimized `<name>.ll`)
+- `-c, --compile-only`: Emit object file (`.o`)
+- `-b, --binary`: Emit linked executable binary (default)
 
 ### Built-in Functions
 - `print(x)`: Prints an `int` or `bool` followed by a newline to stdout.
+- `read()`: Reads an `int` from stdin via `scanf`.
 
 ## Milestones
 
@@ -54,13 +60,14 @@ fela [options] <source_file>
 - [x] Backend object file emission (`.o`) via LLVM `TargetMachine` - done!
 - [x] System runtime linking (`cc`) into executable binary - done!
 - [x] Built-in `print(x)` function for `int` and `bool` - done!
-- [x] Standard compiler CLI (positional source argument, `-o`, `-c`, `-S`, `-h`) - done!
+- [x] Built-in `read()` function - done!
+- [x] Standard compiler CLI with chainable emission toggles (`-a`, `-l`, `-c`, `-b`, `-d`) - done!
+- [x] Hook up LLVM optimization pipeline (`mem2reg`, `instcombine`, `simplifycfg`, etc.) - done!
 
 ## Current Goals
 
 - Add automated end-to-end test suite compiling and running sample Fela programs
 - Fix remaining edge cases in Semantic Checker (return type verification, binary op checks)
-- Hook up LLVM optimization pipeline (`mem2reg` / `-O2`)
 
 ## Language Constraints
 
